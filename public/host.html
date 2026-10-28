@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wall Street Pizza Showdown — Arena Screen</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
+    <!-- Confetti for Grand Finale -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --bg-base: #050811;
+            --bg-card: rgba(15, 23, 42, 0.85);
+            --bg-card-hover: rgba(22, 33, 62, 0.95);
+            --border-glow: rgba(56, 189, 248, 0.25);
+            --accent-cyan: #38BDF8;
+            --accent-green: #10B981;
+            --accent-purple: #A855F7;
+            --accent-red: #F43F5E;
+            --accent-gold: #F59E0B;
+            --text-main: #FFFFFF;
+            --text-sub: #94A3B8;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.1) 0%, transparent 40%),
+                linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+        }
+
+        /* Top Header Arena Bar */
+        .arena-header {
+            height: 80px;
+            background: rgba(10, 15, 29, 0.9);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 20;
+        }
+
+        .brand-box {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .live-tag {
+            background: linear-gradient(135deg, #EF4444, #B91C1C);
+            color: white;
+            font-size: 11px;
+            font-weight: 900;
+            padding: 5px 12px;
+            border-radius: 6px;
+            letter-spacing: 0.1em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .live-tag::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            background: white;
+            border-radius: 50%;
+            display: inline-block;
+            animation: blink 1.2s infinite;
+        }
+
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .brand-text {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            background: linear-gradient(135deg, #FFFFFF, #94A3B8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* Center Stock Ticker Hero */
+        .stock-hero-pill {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid var(--border-glow);
+            padding: 10px 24px;
+            border-radius: 14px;
+            box-shadow: 0 0 30px rgba(56, 189, 248, 0.15);
+        }
+
+        .stock-ticker-name {
+            font-size: 13px;
+            color: var(--text-sub);
+            font-weight: 700;
+            letter-spacing: 0.05em;
+        }
+
+        .stock-price-huge {
+            font-size: 32px;
+            font-weight: 900;
+            color: var(--accent-cyan);
+            font-variant-numeric: tabular-nums;
+            font-family: 'Montserrat', sans-serif;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .stock-price-huge.green-pulse {
+            color: var(--accent-green);
+            transform: scale(1.08);
+            text-shadow: 0 0 25px rgba(16, 185, 129, 0.6);
+        }
+
+        .stock-price-huge.red-pulse {
+            color: var(--accent-red);
+            transform: scale(1.08);
+            text-shadow: 0 0 25px rgba(244, 63, 94, 0.6);
+        }
+
+        .player-counter-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-sub);
+        }
+
+        .player-counter-badge {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: var(--accent-green);
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-weight: 800;
+        }
+
+        /* Main Display Arena */
+        .main-arena {
+            flex: 1;
+            padding: 24px 40px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 1. LOBBY VIEW */
+        .lobby-view {
+            display: flex;
+            gap: 36px;
+            height: 100%;
+        }
+
+        .qr-hero-card {
+            width: 420px;
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            gap: 18px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .qr-hero-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.1), transparent 60%);
+            pointer-events: none;
+        }
+
+        .qr-img-box {
+            width: 250px;
+            height: 250px;
+            background: white;
+            border-radius: 18px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .qr-img-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .url-box {
+            background: rgba(56, 189, 248, 0.12);
+            border: 1.5px solid rgba(56, 189, 248, 0.4);
+            color: var(--accent-cyan);
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 19px;
+            font-weight: 800;
+            font-family: monospace;
+            letter-spacing: 0.04em;
+        }
+
+        .lobby-feed-card {
+            flex: 1;
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 24px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+        }
+
+        .lobby-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .student-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 16px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .student-chip {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 14px;
+            padding: 16px 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            text-align: center;
+            animation: popUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: transform 0.2s;
+        }
+
+        .student-chip:hover {
+            transform: translateY(-3px);
+            border-color: var(--accent-cyan);
+        }
+
+        @keyframes popUp {
+            0% { opacity: 0; transform: scale(0.6); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+
+        .student-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            color: #080C16;
+            font-weight: 900;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+        }
+
+        .student-name {
+            font-size: 14px;
+            font-weight: 700;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 120px;
+        }
+
+        /* 2. LIVE TRADING ARENA VIEW */
+        .trading-view {
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+            height: 100%;
+        }
+
+        /* Breaking News Ticker */
+        .news-hero-banner {
+            background: linear-gradient(135deg, rgba(30, 41, 67, 0.95), rgba(15, 23, 42, 0.95));
+            border-left: 8px solid var(--accent-cyan);
+            border-radius: 18px;
+            padding: 22px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .news-hero-banner.rally-mode {
+            border-left-color: var(--accent-green);
+            background: linear-gradient(135deg, rgba(16, 45, 35, 0.95), rgba(10, 25, 20, 0.95));
+        }
+
+        .news-hero-banner.panic-mode {
+            border-left-color: var(--accent-red);
+            background: linear-gradient(135deg, rgba(60, 20, 30, 0.95), rgba(30, 10, 15, 0.95));
+        }
+
+        .news-hero-banner.dividend-mode {
+            border-left-color: var(--accent-gold);
+            background: linear-gradient(135deg, rgba(60, 45, 15, 0.95), rgba(30, 20, 5, 0.95));
+        }
+
+        .news-content {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-width: 75%;
+        }
+
+        .news-badge {
+            font-size: 11px;
+            font-weight: 900;
+            color: var(--accent-gold);
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .news-title {
+            font-size: 28px;
+            font-weight: 900;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: -0.02em;
+        }
+
+        .news-desc {
+            font-size: 15px;
+            color: var(--text-sub);
+            line-height: 1.4;
+        }
+
+        .round-meter-box {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 6px;
+        }
+
+        .round-counter-pill {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            background: rgba(56, 189, 248, 0.15);
+            padding: 6px 14px;
+            border-radius: 8px;
+            letter-spacing: 0.05em;
+        }
+
+        /* Two Visual Arenas (Pizza + Live Leaderboard) */
+        .stage-columns {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 460px 1fr;
+            gap: 24px;
+            overflow: hidden;
+        }
+
+        /* Visual Pizza Card */
+        .pizza-visual-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pizza-wheel-container {
+            width: 260px;
+            height: 260px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 10px 0;
+        }
+
+        .pizza-wheel-svg {
+            width: 100%;
+            height: 100%;
+            filter: drop-shadow(0 15px 30px rgba(245, 158, 11, 0.3));
+            animation: slowSpin 60s linear infinite;
+        }
+
+        @keyframes slowSpin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pizza-center-badge {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #111827;
+            border: 3px solid var(--accent-gold);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.8);
+            z-index: 5;
+        }
+
+        .pizza-stats-row {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            padding: 12px 18px;
+            font-size: 13px;
+        }
+
+        /* Leaderboard and Live Feed Grid */
+        .board-feed-card {
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .leaderboard-table th {
+            text-align: left;
+            padding: 12px 14px;
+            color: var(--text-sub);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 12px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+        }
+
+        .leaderboard-table td {
+            padding: 12px 14px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .rank-chip {
+            width: 26px;
+            height: 26px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            font-size: 12px;
+        }
+
+        .rank-1 { background: #F59E0B; color: #000; box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+        .rank-2 { background: #94A3B8; color: #000; }
+        .rank-3 { background: #D97706; color: #fff; }
+
+        /* 3. SPEED QUIZ ARENA */
+        .quiz-view {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 36px;
+            text-align: center;
+        }
+
+        .quiz-title-badge {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            color: #080C16;
+            font-size: 13px;
+            font-weight: 900;
+            padding: 6px 18px;
+            border-radius: 100px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .quiz-headline {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 38px;
+            font-weight: 900;
+            max-width: 950px;
+            line-height: 1.25;
+            letter-spacing: -0.02em;
+        }
+
+        .quiz-cards-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 950px;
+        }
+
+        .quiz-option-card {
+            padding: 28px 24px;
+            border-radius: 18px;
+            font-size: 21px;
+            font-weight: 800;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 2px solid transparent;
+            transition: transform 0.2s;
+        }
+
+        .quiz-option-card:hover { transform: scale(1.02); }
+
+        .card-red { background: #DC2626; color: white; }
+        .card-blue { background: #2563EB; color: white; }
+        .card-green { background: #16A34A; color: white; }
+        .card-yellow { background: #D97706; color: white; }
+
+        .opt-letter {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+        }
+
+        /* 4. CHAMPIONS PODIUM */
+        .gameover-view {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            gap: 24px;
+            text-align: center;
+        }
+
+        .podium-stage {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            gap: 24px;
+            height: 400px;
+            width: 100%;
+            max-width: 850px;
+            margin-top: 10px;
+        }
+
+        .pillar {
+            flex: 1;
+            border-radius: 20px 20px 0 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            padding-bottom: 28px;
+            position: relative;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, 0.8);
+            transition: height 1s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .pillar-gold {
+            height: 340px;
+            background: linear-gradient(180deg, #F59E0B, #92400E);
+            border: 2px solid #FCD34D;
+        }
+
+        .pillar-silver {
+            height: 260px;
+            background: linear-gradient(180deg, #94A3B8, #334155);
+            border: 2px solid #E2E8F0;
+        }
+
+        .pillar-bronze {
+            height: 200px;
+            background: linear-gradient(180deg, #D97706, #78350F);
+            border: 2px solid #FBBF24;
+        }
+
+        .winner-crown {
+            font-size: 44px;
+            position: absolute;
+            top: -55px;
+            animation: bounce 1.5s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .winner-name-text {
+            font-size: 22px;
+            font-weight: 900;
+            font-family: 'Montserrat', sans-serif;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        .winner-score-pill {
+            font-size: 17px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.95);
+            background: rgba(0, 0, 0, 0.25);
+            padding: 4px 14px;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .rank-number-big {
+            font-size: 54px;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.7);
+            font-family: 'Montserrat', sans-serif;
+            line-height: 1;
+        }
+
+        /* Bottom Command Dock */
+        .arena-dock {
+            height: 75px;
+            background: rgba(10, 15, 29, 0.9);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 20;
+        }
+
+        .ctrl-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .ctrl-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: var(--accent-cyan);
+            transform: translateY(-2px);
+        }
+
+        .btn-launch {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            border: none;
+            color: #080C16;
+            font-size: 15px;
+            font-weight: 900;
+            padding: 13px 32px;
+            box-shadow: 0 0 25px rgba(56, 189, 248, 0.4);
+        }
+
+        .btn-launch:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 35px rgba(56, 189, 248, 0.6);
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Header -->
+    <div class="arena-header">
+        <div class="brand-box">
+            <span class="live-tag">LIVE ARENA</span>
+            <span class="brand-text">THE STOCK MARKET SHOWDOWN</span>
+        </div>
+
+        <div class="stock-hero-pill">
+            <span class="stock-ticker-name">NOVA PIZZA INC. (NPZ)</span>
+            <span class="stock-price-huge" id="stockPriceDisplay">$10.00</span>
+        </div>
+
+        <div class="player-counter-box">
+            <span>INVESTORS:</span>
+            <div class="player-counter-badge" id="playerCount">0 Connected</div>
+        </div>
+    </div>
+
+    <!-- Main Arena Display -->
+    <div class="main-arena">
+        <!-- 1. LOBBY VIEW -->
+        <div class="lobby-view" id="lobbyView">
+            <div class="qr-hero-card">
+                <div style="font-size: 13px; font-weight: 800; color: var(--accent-cyan); letter-spacing: 0.1em;">CONNECT TO ARENA</div>
+                <h2 style="font-size: 26px; font-weight: 900;">Scan with Phone Camera</h2>
+                <div class="qr-img-box">
+                    <img id="qrImg" alt="QR Code" src="">
+                </div>
+                <div style="font-size: 12px; color: var(--text-sub);">Or open this link on your phone:</div>
+                <div class="url-box" id="joinUrlText">http://...</div>
+            </div>
+
+            <div class="lobby-feed-card">
+                <div class="lobby-header-row">
+                    <div>
+                        <h2 style="font-size: 28px; font-weight: 900; font-family: 'Montserrat', sans-serif;">Waiting Room</h2>
+                        <p style="font-size: 14px; color: var(--text-sub); margin-top: 4px;">Students joining live with $100 starting cash</p>
+                    </div>
+                    <button class="ctrl-btn btn-launch" onclick="nextRound()">START GAME ▶</button>
+                </div>
+                <div class="student-grid" id="lobbyPlayerGrid">
+                    <!-- Populated dynamically via WS -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. TRADING ARENA VIEW -->
+        <div class="trading-view" id="tradingView">
+            <div class="news-hero-banner" id="newsBanner">
+                <div class="news-content">
+                    <div class="news-badge" id="newsTag">MARKET ALERT</div>
+                    <div class="news-title" id="newsHeadline">Round Headline</div>
+                    <div class="news-desc" id="newsDetails">Details of the current market cycle...</div>
+                </div>
+                <div class="round-meter-box">
+                    <div class="round-counter-pill" id="roundCounterPill">ROUND 1 OF 6</div>
+                    <div style="font-size: 13px; color: var(--text-sub);" id="roundSubLabel">Trading Window Open</div>
+                </div>
+            </div>
+
+            <div class="stage-columns">
+                <!-- Visual Pizza Wheel Card -->
+                <div class="pizza-visual-card">
+                    <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 14px; font-weight: 800; color: var(--accent-gold);">THE COMPANY ASSET</span>
+                        <span style="font-size: 12px; color: var(--text-sub);" id="totalSharesLabel">1 Share = 1 Slice</span>
+                    </div>
+
+                    <div class="pizza-wheel-container">
+                        <svg class="pizza-wheel-svg" viewBox="0 0 200 200">
+                            <!-- Golden Crust -->
+                            <circle cx="100" cy="100" r="92" fill="#D97706" stroke="#B45309" stroke-width="6"/>
+                            <!-- Cheese Base -->
+                            <circle cx="100" cy="100" r="82" fill="#FBBF24"/>
+                            <!-- Sauce Layer -->
+                            <circle cx="100" cy="100" r="80" fill="#EF4444" opacity="0.3"/>
+                            <!-- Slice Lines (8 slices) -->
+                            <line x1="100" y1="18" x2="100" y2="182" stroke="#B45309" stroke-width="2.5"/>
+                            <line x1="18" y1="100" x2="182" y2="100" stroke="#B45309" stroke-width="2.5"/>
+                            <line x1="42" y1="42" x2="158" y2="158" stroke="#B45309" stroke-width="2.5"/>
+                            <line x1="42" y1="158" x2="158" y2="42" stroke="#B45309" stroke-width="2.5"/>
+                            <!-- Pepperoni Toppings -->
+                            <circle cx="100" cy="50" r="11" fill="#DC2626"/>
+                            <circle cx="100" cy="150" r="11" fill="#DC2626"/>
+                            <circle cx="50" cy="100" r="11" fill="#DC2626"/>
+                            <circle cx="150" cy="100" r="11" fill="#DC2626"/>
+                            <circle cx="65" cy="65" r="11" fill="#DC2626"/>
+                            <circle cx="135" cy="65" r="11" fill="#DC2626"/>
+                            <circle cx="65" cy="135" r="11" fill="#DC2626"/>
+                            <circle cx="135" cy="135" r="11" fill="#DC2626"/>
+                        </svg>
+                        <div class="pizza-center-badge">
+                            <span style="font-size: 10px; font-weight: 800; color: var(--accent-gold);">EQUITY</span>
+                            <span style="font-size: 13px; font-weight: 900; color: white;">SHARES</span>
+                        </div>
+                    </div>
+
+                    <div class="pizza-stats-row">
+                        <div>
+                            <span style="color: var(--text-sub); display: block; font-size: 11px;">VALUATION</span>
+                            <strong style="color: var(--accent-cyan); font-size: 16px;" id="pizzaValuation">$3.5 Billion</strong>
+                        </div>
+                        <div style="text-align: right;">
+                            <span style="color: var(--text-sub); display: block; font-size: 11px;">PER SHARE</span>
+                            <strong style="color: var(--accent-green); font-size: 16px;" id="pizzaPerShare">$10.00</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Leaderboard & Feed -->
+                <div class="board-feed-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                        <h3 style="font-size: 20px; font-weight: 900; font-family: 'Montserrat', sans-serif;">Live Portfolio Standings</h3>
+                        <span style="font-size: 12px; color: var(--text-sub); font-weight: 600;">Ranked by Total Net Worth</span>
+                    </div>
+                    <div style="flex: 1; overflow-y: auto;">
+                        <table class="leaderboard-table">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Student</th>
+                                    <th>Cash</th>
+                                    <th>Shares</th>
+                                    <th>Recent Move</th>
+                                    <th style="text-align: right;">Net Worth</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tradingTableBody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. SPEED QUIZ ARENA VIEW -->
+        <div class="quiz-view" id="quizView">
+            <div class="quiz-title-badge">RAPID KNOWLEDGE CHECK (+CASH BONUS)</div>
+            <div class="quiz-headline" id="quizQuestionText">Question Goes Here?</div>
+            <div class="quiz-cards-grid">
+                <div class="quiz-option-card card-red" id="opt0">
+                    <div class="opt-letter">A</div>
+                    <span id="optText0">Option A</span>
+                </div>
+                <div class="quiz-option-card card-blue" id="opt1">
+                    <div class="opt-letter">B</div>
+                    <span id="optText1">Option B</span>
+                </div>
+                <div class="quiz-option-card card-green" id="opt2">
+                    <div class="opt-letter">C</div>
+                    <span id="optText2">Option C</span>
+                </div>
+                <div class="quiz-option-card card-yellow" id="opt3">
+                    <div class="opt-letter">D</div>
+                    <span id="optText3">Option D</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 4. GRAND FINALE PODIUM VIEW -->
+        <div class="gameover-view" id="gameoverView">
+            <div class="quiz-title-badge" style="background: var(--accent-gold); color: #000;">THE FINAL BELL</div>
+            <h1 style="font-size: 48px; font-weight: 900; font-family: 'Montserrat', sans-serif;">Wall Street Champions</h1>
+            <p style="font-size: 16px; color: var(--text-sub);">Here are the students who built the largest portfolios through patience and compounding:</p>
+
+            <div class="podium-stage">
+                <!-- 2nd Place Silver -->
+                <div class="pillar pillar-silver">
+                    <div class="winner-name-text" id="p2Name">Silver</div>
+                    <div class="winner-score-pill" id="p2Score">$0 Net Worth</div>
+                    <div class="rank-number-big">2</div>
+                </div>
+                <!-- 1st Place Gold -->
+                <div class="pillar pillar-gold">
+                    <div class="winner-crown">👑</div>
+                    <div class="winner-name-text" id="p1Name" style="font-size: 26px;">Champion</div>
+                    <div class="winner-score-pill" id="p1Score" style="color: #FCD34D;">$0 Net Worth</div>
+                    <div class="rank-number-big">1</div>
+                </div>
+                <!-- 3rd Place Bronze -->
+                <div class="pillar pillar-bronze">
+                    <div class="winner-name-text" id="p3Name">Bronze</div>
+                    <div class="winner-score-pill" id="p3Score">$0 Net Worth</div>
+                    <div class="rank-number-big">3</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Command Dock -->
+    <div class="arena-dock">
+        <div style="font-size: 14px; color: var(--text-sub); font-weight: 700;" id="currentRoundTitle">
+            Phase: Waiting in Lobby
+        </div>
+        <div style="display: flex; gap: 14px;">
+            <a href="/slides" target="_blank" class="ctrl-btn" style="text-decoration: none; color: var(--accent-cyan); border-color: rgba(56, 189, 248, 0.4); display: flex; align-items: center; gap: 6px;">📊 Slides Deck</a>
+            <button class="ctrl-btn" onclick="prevRound()">◀ Previous Round</button>
+            <button class="ctrl-btn btn-launch" onclick="nextRound()">Next Round ▶</button>
+            <button class="ctrl-btn" onclick="resetGame()" style="color: var(--accent-red); border-color: rgba(244, 63, 94, 0.3);">↺ Reset</button>
+        </div>
+    </div>
+
+    <script>
+        let ws;
+        let prevPrice = 10;
+
+        // Web Audio Synthesizer (Zero file dependencies, crisp sound effects)
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playChime(freq, duration = 0.2, type = 'sine') {
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        function sfxCoin() {
+            playChime(987.77, 0.1, 'triangle');
+            setTimeout(() => playChime(1318.51, 0.3, 'triangle'), 80);
+        }
+
+        function sfxGong() {
+            playChime(150, 0.6, 'sawtooth');
+        }
+
+        function sfxVictory() {
+            const notes = [523.25, 659.25, 783.99, 1046.50];
+            notes.forEach((f, i) => {
+                setTimeout(() => playChime(f, 0.4, 'triangle'), i * 140);
+            });
+            if (window.confetti) {
+                confetti({ particleCount: 120, spread: 80, origin: { y: 0.6 } });
+            }
+        }
+
+        // Fetch IP and QR
+        fetch('/api/info')
+            .then(res => res.json())
+            .then(data => {
+                document.getElementById('joinUrlText').textContent = data.joinUrl;
+                if (data.qrDataUrl) {
+                    document.getElementById('qrImg').src = data.qrDataUrl;
+                }
+            });
+
+        function connectWS() {
+            const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            ws = new WebSocket(`${proto}//${window.location.host}`);
+
+            ws.onopen = () => {
+                ws.send(JSON.stringify({ type: 'HOST_CONNECT' }));
+            };
+
+            ws.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+                if (data.type === 'INIT_HOST' || data.type === 'STATE_UPDATE') {
+                    renderState(data.state);
+                }
+            };
+
+            ws.onclose = () => setTimeout(connectWS, 1500);
+        }
+
+        function renderState(state) {
+            // Price Animation & Styling
+            const priceEl = document.getElementById('stockPriceDisplay');
+            priceEl.textContent = `$${state.stockPrice.toFixed(2)}`;
+            document.getElementById('pizzaPerShare').textContent = `$${state.stockPrice.toFixed(2)}`;
+            document.getElementById('pizzaValuation').textContent = `$${(state.stockPrice * 0.35).toFixed(1)} Billion`;
+
+            if (state.stockPrice > prevPrice) {
+                priceEl.classList.remove('red-pulse');
+                priceEl.classList.add('green-pulse');
+                sfxCoin();
+            } else if (state.stockPrice < prevPrice) {
+                priceEl.classList.remove('green-pulse');
+                priceEl.classList.add('red-pulse');
+                sfxGong();
+            }
+            prevPrice = state.stockPrice;
+            setTimeout(() => {
+                priceEl.classList.remove('green-pulse', 'red-pulse');
+            }, 800);
+
+            document.getElementById('playerCount').textContent = `${state.players.length} Connected`;
+            document.getElementById('currentRoundTitle').textContent = state.roundTitle || 'Lobby';
+
+            const lobbyView = document.getElementById('lobbyView');
+            const tradingView = document.getElementById('tradingView');
+            const quizView = document.getElementById('quizView');
+            const gameoverView = document.getElementById('gameoverView');
+
+            lobbyView.style.display = 'none';
+            tradingView.style.display = 'none';
+            quizView.style.display = 'none';
+            gameoverView.style.display = 'none';
+
+            if (state.phase === 'LOBBY') {
+                lobbyView.style.display = 'flex';
+                renderLobby(state.players);
+            } else if (state.phase.startsWith('ROUND_5_QUIZ') || state.phase.startsWith('ROUND_6_QUIZ')) {
+                quizView.style.display = 'flex';
+                renderQuiz(state.quizQuestion);
+            } else if (state.phase === 'GAME_OVER') {
+                gameoverView.style.display = 'flex';
+                renderPodium(state.players);
+                sfxVictory();
+            } else {
+                tradingView.style.display = 'flex';
+                renderTrading(state);
+            }
+        }
+
+        function renderLobby(players) {
+            const grid = document.getElementById('lobbyPlayerGrid');
+            grid.innerHTML = '';
+            if (!players || players.length === 0) {
+                grid.innerHTML = `
+                    <div style="grid-column: 1 / -1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; text-align: center; color: var(--text-sub);">
+                        <div style="font-size: 40px; margin-bottom: 12px; filter: drop-shadow(0 0 12px rgba(56, 189, 248, 0.4));">📱</div>
+                        <div style="font-size: 20px; font-weight: 800; color: #FFFFFF; margin-bottom: 6px;">Waiting for Students to Join...</div>
+                        <div style="font-size: 14px; color: var(--text-sub);">Students scan the QR code on the left or type the link on their mobile phones</div>
+                    </div>
+                `;
+                return;
+            }
+            players.forEach(p => {
+                const chip = document.createElement('div');
+                chip.className = 'student-chip';
+                chip.innerHTML = `
+                    <div class="student-avatar">${p.name.charAt(0).toUpperCase()}</div>
+                    <div class="student-name">${p.name}</div>
+                    <div style="font-size: 12px; color: var(--accent-green); font-weight: 800;">$${p.cash}</div>
+                `;
+                grid.appendChild(chip);
+            });
+        }
+
+        function renderTrading(state) {
+            const banner = document.getElementById('newsBanner');
+            banner.className = 'news-hero-banner';
+            if (state.phase === 'ROUND_2_RALLY') banner.classList.add('rally-mode');
+            if (state.phase === 'ROUND_3_DIP') banner.classList.add('panic-mode');
+            if (state.phase === 'ROUND_4_DIVIDEND') banner.classList.add('dividend-mode');
+
+            document.getElementById('newsHeadline').textContent = state.newsHeadline;
+            document.getElementById('newsDetails').textContent = state.newsDetails;
+            document.getElementById('roundCounterPill').textContent = `ROUND ${state.roundNumber} OF 6`;
+
+            const tbody = document.getElementById('tradingTableBody');
+            tbody.innerHTML = '';
+            state.players.forEach((p, idx) => {
+                const tr = document.createElement('tr');
+                let rankBadge = `<span class="rank-chip">${idx + 1}</span>`;
+                if (idx === 0) rankBadge = `<span class="rank-chip rank-1">1</span>`;
+                if (idx === 1) rankBadge = `<span class="rank-chip rank-2">2</span>`;
+                if (idx === 2) rankBadge = `<span class="rank-chip rank-3">3</span>`;
+
+                tr.innerHTML = `
+                    <td>${rankBadge}</td>
+                    <td style="font-weight: 800;">${p.name}</td>
+                    <td style="color: var(--accent-cyan); font-weight: 700;">$${p.cash}</td>
+                    <td style="font-weight: 800; color: var(--accent-gold);">${p.shares} slices</td>
+                    <td style="font-size: 13px; color: var(--text-sub);">${p.lastAction || 'Waiting'}</td>
+                    <td style="font-weight: 900; color: var(--accent-green); font-size: 17px; text-align: right;">$${p.netWorth}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderQuiz(quiz) {
+            if (!quiz) return;
+            document.getElementById('quizQuestionText').textContent = quiz.question;
+            document.getElementById('optText0').textContent = quiz.options[0];
+            document.getElementById('optText1').textContent = quiz.options[1];
+            document.getElementById('optText2').textContent = quiz.options[2];
+            document.getElementById('optText3').textContent = quiz.options[3];
+        }
+
+        function renderPodium(players) {
+            if (players.length > 0) {
+                document.getElementById('p1Name').textContent = players[0].name;
+                document.getElementById('p1Score').textContent = `$${players[0].netWorth} Net Worth`;
+            }
+            if (players.length > 1) {
+                document.getElementById('p2Name').textContent = players[1].name;
+                document.getElementById('p2Score').textContent = `$${players[1].netWorth} Net Worth`;
+            }
+            if (players.length > 2) {
+                document.getElementById('p3Name').textContent = players[2].name;
+                document.getElementById('p3Score').textContent = `$${players[2].netWorth} Net Worth`;
+            }
+        }
+
+        function nextRound() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'HOST_NEXT_ROUND' }));
+            }
+        }
+
+        function prevRound() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'HOST_PREV_ROUND' }));
+            }
+        }
+
+        function resetGame() {
+            if (confirm('Reset game back to lobby?') && ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'HOST_RESET' }));
+            }
+        }
+
+        connectWS();
+    </script>
+</body>
+</html>

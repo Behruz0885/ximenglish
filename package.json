@@ -1,0 +1,27 @@
+{
+  "name": "stocks-and-shares-game",
+  "version": "1.0.0",
+  "description": "Interactive Real-time Stock Market Arena & Presentation for Students",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "stocks",
+    "shares",
+    "education",
+    "multiplayer",
+    "classroom-game",
+    "websockets"
+  ],
+  "author": "Behruz Shonazarov",
+  "license": "MIT",
+  "dependencies": {
+    "qrcode": "^1.5.4",
+    "ws": "^8.18.0"
+  }
+}

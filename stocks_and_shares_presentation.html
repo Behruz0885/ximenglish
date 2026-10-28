@@ -1,0 +1,911 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stocks & Shares: Beyond The Noise</title>
+    <!-- Harmonized Clean Typography: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            --bg-dark: #0B0F19;
+            --bg-card: rgba(20, 27, 45, 0.85);
+            --bg-card-hover: rgba(26, 36, 60, 0.95);
+            --border-card: rgba(255, 255, 255, 0.08);
+            --border-glow: rgba(56, 189, 248, 0.3);
+            --accent-green: #10B981;
+            --accent-cyan: #38BDF8;
+            --accent-purple: #A855F7;
+            --accent-red: #F87171;
+            --accent-yellow: #FBBF24;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --text-muted: #64748B;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-dark);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+            text-rendering: optimizeLegibility;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+        }
+
+        .ambient-glow {
+            position: fixed;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.1), transparent 70%);
+            top: -150px;
+            right: -150px;
+            z-index: 0;
+            pointer-events: none;
+            filter: blur(80px);
+        }
+
+        .ambient-glow-2 {
+            position: fixed;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(16, 185, 129, 0.08), transparent 70%);
+            bottom: -150px;
+            left: -150px;
+            z-index: 0;
+            pointer-events: none;
+            filter: blur(80px);
+        }
+
+        .presentation-deck {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            max-width: calc(100vh * 16 / 9);
+            max-height: calc(100vw * 9 / 16);
+            overflow: hidden;
+            background: #0E1424;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.9);
+            z-index: 1;
+        }
+
+        .slide {
+            position: absolute;
+            inset: 0;
+            padding: 45px 65px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            opacity: 0;
+            visibility: hidden;
+            transform: scale(0.98) translateY(8px);
+            transition: opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
+        }
+
+        .slide.active {
+            opacity: 1;
+            visibility: visible;
+            transform: scale(1) translateY(0);
+        }
+
+        h1, h2, h3, .heading {
+            font-family: var(--font-family);
+            font-weight: 800;
+            letter-spacing: -0.025em;
+        }
+
+        .pill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 12px;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 6px;
+            color: var(--accent-green);
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            width: fit-content;
+        }
+
+        .pill-cyan {
+            background: rgba(56, 189, 248, 0.12);
+            border-color: rgba(56, 189, 248, 0.3);
+            color: var(--accent-cyan);
+        }
+
+        .pill-purple {
+            background: rgba(168, 85, 247, 0.12);
+            border-color: rgba(168, 85, 247, 0.3);
+            color: var(--accent-purple);
+        }
+
+        .pill-red {
+            background: rgba(248, 113, 113, 0.12);
+            border-color: rgba(248, 113, 113, 0.3);
+            color: var(--accent-red);
+        }
+
+        .slide-header {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .slide-title {
+            font-size: clamp(24px, 2.9vw, 36px);
+            color: var(--text-primary);
+            font-weight: 800;
+            line-height: 1.2;
+            letter-spacing: -0.025em;
+        }
+
+        .slide-title span.highlight {
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .slide-body {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            margin: 16px 0;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            width: 100%;
+        }
+
+        .grid-3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border-card);
+            border-radius: 12px;
+            padding: 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            transition: all 0.25s ease;
+            position: relative;
+        }
+
+        .card:hover {
+            border-color: var(--border-glow);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.015em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .card-subtitle {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .bullet-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 9px;
+            font-size: 13px;
+            line-height: 1.5;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .bullet-list li {
+            position: relative;
+            padding-left: 18px;
+        }
+
+        .bullet-list li::before {
+            content: "•";
+            position: absolute;
+            left: 2px;
+            color: var(--accent-cyan);
+            font-weight: bold;
+            font-size: 15px;
+        }
+
+        .card-green .bullet-list li::before {
+            color: var(--accent-green);
+        }
+
+        .card-red .bullet-list li::before {
+            color: var(--accent-red);
+        }
+
+        .bottom-banner {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px dashed rgba(255, 255, 255, 0.12);
+            border-radius: 8px;
+            padding: 10px 18px;
+            text-align: center;
+            font-size: 12.5px;
+            font-weight: 600;
+            color: var(--accent-yellow);
+            letter-spacing: 0.01em;
+        }
+
+        .deck-controls {
+            position: absolute;
+            bottom: 14px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 10;
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: white;
+            font-family: var(--font-family);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: var(--accent-cyan);
+        }
+
+        .progress-bar-container {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.06);
+            z-index: 10;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-green));
+            width: 10%;
+            transition: width 0.3s ease;
+        }
+
+        .slide-counter {
+            position: absolute;
+            bottom: 16px;
+            left: 20px;
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 600;
+            letter-spacing: 0.05em;
+            z-index: 10;
+        }
+
+        .notes-drawer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(10, 14, 23, 0.96);
+            backdrop-filter: blur(16px);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 18px 36px;
+            font-size: 13.5px;
+            color: #E2E8F0;
+            line-height: 1.5;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 20;
+        }
+
+        .notes-drawer.open {
+            transform: translateY(0);
+        }
+
+        .notes-drawer h4 {
+            font-size: 11px;
+            color: var(--accent-yellow);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 6px;
+        }
+
+        .kb-hint {
+            position: absolute;
+            top: 14px;
+            right: 20px;
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .kb-hint kbd {
+            background: rgba(255, 255, 255, 0.08);
+            padding: 2px 5px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #E2E8F0;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient-glow"></div>
+    <div class="ambient-glow-2"></div>
+
+    <div class="presentation-deck" id="deck">
+        <div class="kb-hint">
+            <span><kbd>←</kbd> <kbd>→</kbd> Navigate</span>
+            <span><kbd>Space</kbd> Next</span>
+            <span><kbd>N</kbd> Notes</span>
+            <span><kbd>F</kbd> Fullscreen</span>
+        </div>
+
+        <!-- SLIDE 1: TITLE -->
+        <div class="slide active" data-notes="Welcome everyone. Today we are breaking down stocks and shares in crystal-clear English. No corporate buzzwords, no gatekeeping. Just practical financial mechanics.">
+            <div class="slide-header" style="margin-top: 24px;">
+                <div class="pill-badge">MODERN WEALTH PLAYBOOK</div>
+                <h1 class="slide-title" style="font-size: 48px; margin-top: 14px;">
+                    Stocks & Shares:<br>
+                    <span class="highlight">Beyond The Noise.</span>
+                </h1>
+                <p style="font-size: 18px; color: var(--text-secondary); max-width: 780px; margin-top: 12px; line-height: 1.5; font-weight: 400;">
+                    How to transition from being an everyday consumer into a legal co-owner of the world's most profitable businesses.
+                </p>
+            </div>
+            <div class="bottom-banner" style="background: rgba(16, 185, 129, 0.08); border-color: rgba(16, 185, 129, 0.25); color: var(--accent-green); text-align: left; display: flex; justify-content: space-between;">
+                <span>STRUCTURED GUIDE  •  PLAIN ENGLISH  •  ACTIONABLE FRAMEWORK</span>
+                <span style="color: var(--accent-cyan);">10 High-Impact Slides</span>
+            </div>
+        </div>
+
+        <!-- SLIDE 2: THE PIZZA ANALOGY -->
+        <div class="slide" data-notes="Explain the pizza analogy. Company = whole pizza, 1 share = 1 slice. Buying a share legally confers ownership. When the business expands, your slice appreciates in value.">
+            <div class="slide-header">
+                <div class="pill-badge pill-cyan">CORE CONCEPT</div>
+                <h2 class="slide-title">What is a Stock? Think of a Giant Pizza</h2>
+            </div>
+            <div class="slide-body">
+                <div class="grid-2">
+                    <div class="card" style="border-color: rgba(56, 189, 248, 0.25);">
+                        <div class="card-title" style="color: var(--accent-cyan);">1. The Whole Pizza = The Company</div>
+                        <div class="card-subtitle">Apple, Tesla, or Nike as an entire business</div>
+                        <ul class="bullet-list">
+                            <li>A giant corporation is valued at billions or trillions of dollars.</li>
+                            <li>No single everyday person has $3 Trillion to purchase the entire enterprise.</li>
+                            <li>So the entire business is sliced into millions of tiny, equal portions called <strong>SHARES</strong>.</li>
+                            <li>Each individual share represents an exact fraction of that total company.</li>
+                        </ul>
+                    </div>
+
+                    <div class="card" style="border-color: rgba(16, 185, 129, 0.25);">
+                        <div class="card-title" style="color: var(--accent-green);">2. One Slice = One Share You Own</div>
+                        <div class="card-subtitle">Your certified legal co-ownership rights</div>
+                        <ul class="bullet-list">
+                            <li>When you buy even 1 single share, you legally co-own that business.</li>
+                            <li>When the company sells 100M devices worldwide, the entire pizza grows.</li>
+                            <li>Because the whole pizza expands in value, your individual slice is worth more.</li>
+                            <li><strong style="color: var(--text-primary); font-weight: 600;">You don't clock in or attend meetings: thousands of employees work for you.</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="bottom-banner">
+                Bottom Line: You do not need to build a tech empire from scratch. You can just buy a slice of one.
+            </div>
+        </div>
+
+        <!-- SLIDE 3: CONSUMER VS OWNER -->
+        <div class="slide" data-notes="Point out the financial contrast. Show that consumers trade money for depreciating items, while shareholders trade money for income-producing assets.">
+            <div class="slide-header">
+                <div class="pill-badge pill-purple">MINDSET SHIFT</div>
+                <h2 class="slide-title">Consumer vs. Owner: Flipping The Script</h2>
+            </div>
+            <div class="slide-body">
+                <div class="grid-2">
+                    <div class="card" style="border-color: rgba(248, 113, 113, 0.25);">
+                        <div class="card-title" style="color: var(--accent-red);">The Consumer Cycle</div>
+                        <div class="card-subtitle">Spending on depreciating assets</div>
+                        <ul class="bullet-list">
+                            <li>Spends $1,200 annually on new smartphone upgrades and retail gear.</li>
+                            <li>Pays ongoing monthly subscription fees across multiple platforms.</li>
+                            <li>Cash flows strictly outward to strengthen corporate balance sheets.</li>
+                            <li><strong style="color: var(--text-primary); font-weight: 600;">Outcome: 0% financial equity and declining physical resale value.</strong></li>
+                        </ul>
+                    </div>
+
+                    <div class="card" style="border-color: rgba(16, 185, 129, 0.25);">
+                        <div class="card-title" style="color: var(--accent-green);">The Shareholder Advantage</div>
+                        <div class="card-subtitle">Acquiring equity in operating cash flows</div>
+                        <ul class="bullet-list">
+                            <li>Allocates capital into the very companies whose services they use daily.</li>
+                            <li>When millions of customers purchase goods, corporate earnings rise.</li>
+                            <li>Share valuations appreciate and quarterly dividends are distributed.</li>
+                            <li><strong style="color: var(--accent-cyan); font-weight: 600;">Outcome: Building compounding equity while management works for you.</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="bottom-banner">
+                Key Principle: You do not need to create a global conglomerate to profit from corporate success.
+            </div>
+        </div>
+
+        <!-- SLIDE 4: TERMINOLOGY -->
+        <div class="slide" data-notes="Clarify that these terms are often mistakenly interchanged in casual conversation. Knowing the difference establishes credibility.">
+            <div class="slide-header">
+                <div class="pill-badge pill-cyan">TERMINOLOGY</div>
+                <h2 class="slide-title">Three Core Terms You Need To Master</h2>
+            </div>
+            <div class="slide-body">
+                <div class="grid-3">
+                    <div class="card">
+                        <div class="card-title" style="color: var(--accent-cyan); justify-content: center;">A STOCK</div>
+                        <div class="card-subtitle" style="text-align: center;">The Asset Category</div>
+                        <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 6px 0;">
+                        <ul class="bullet-list">
+                            <li><strong>Definition:</strong> General ownership certificates in commercial companies.</li>
+                            <li><strong>In Practice:</strong> "I allocate 20% of monthly savings to the stock market."</li>
+                            <li><span style="color: var(--accent-yellow);">Category:</span> Broad asset class.</li>
+                        </ul>
+                    </div>
+
+                    <div class="card" style="border-color: rgba(16, 185, 129, 0.25);">
+                        <div class="card-title" style="color: var(--accent-green); justify-content: center;">A SHARE</div>
+                        <div class="card-subtitle" style="text-align: center;">The Quantifiable Unit</div>
+                        <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 6px 0;">
+                        <ul class="bullet-list">
+                            <li><strong>Definition:</strong> The exact countable slice of a single distinct enterprise.</li>
+                            <li><strong>In Practice:</strong> "I bought 4 shares of Microsoft at $410 per unit."</li>
+                            <li><span style="color: var(--accent-yellow);">Category:</span> Specific individual unit.</li>
+                        </ul>
+                    </div>
+
+                    <div class="card" style="border-color: rgba(168, 85, 247, 0.25);">
+                        <div class="card-title" style="color: var(--accent-purple); justify-content: center;">THE MARKET</div>
+                        <div class="card-subtitle" style="text-align: center;">The Exchange Platform</div>
+                        <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.08); margin: 6px 0;">
+                        <ul class="bullet-list">
+                            <li><strong>Definition:</strong> The clearinghouse (e.g. NYSE, NASDAQ) matching buyers & sellers.</li>
+                            <li><strong>In Practice:</strong> "Trading opens at 9:30 AM EST on international markets."</li>
+                            <li><span style="color: var(--accent-yellow);">Category:</span> Transaction network.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="bottom-banner" style="color: var(--accent-cyan);">
+                Rule: You buy shares of an individual stock through the stock exchange network.
+            </div>
+        </div>
+
+        <!-- SLIDE 5: TWO ENGINES OF PROFIT -->
+        <div class="slide" data-notes="Explain both wealth engines: Capital appreciation (selling higher) and Dividends (quarterly profit payouts). Highlight how DRIP automates compounding.">
+            <div class="slide-header">
+                <div class="pill-badge">CASH FLOW</div>
+                <h2 class="slide-title">Two Ways You Actually Make Money</h2>
+            </div>
+            <div class="slide-body">
+                <div class="grid-2">
+                    <div class="card" style="border-color: rgba(56, 189, 248, 0.25);">
+                        <div class="card-title" style="color: var(--accent-cyan);">1. Capital Gains (Buy Low, Sell High)</div>
+                        <div class="card-subtitle">Value appreciation over time</div>
+                        <ul class="bullet-list">
+                            <li>You purchase 1 share of an expanding company at $50.</li>
+                            <li>The business expands revenue and delivers innovative products.</li>
+                            <li>Two years later, market demand pushes the price to $135.</li>
+                            <li><strong style="color: var(--accent-green); font-weight: 700;">You sell and pocket +$85 (+170%) pure profit!</strong></li>
+                        </ul>
+                    </div>
+
+                    <div class="card" style="border-color: rgba(16, 185, 129, 0.25);">
+                        <div class="card-title" style="color: var(--accent-green);">2. Dividends (Direct Cash Payouts)</div>
+                        <div class="card-subtitle">Passive cash flow distributed quarterly</div>
+                        <ul class="bullet-list">
+                            <li>Profitable enterprises share recurring cash profits with owners.</li>
+                            <li>Direct cash is deposited to your broker account every 3 months.</li>
+                            <li><strong style="color: var(--text-primary); font-weight: 600;">Crucial: You never have to sell your shares to receive this income.</strong></li>
+                            <li>DRIP feature: Automatically reinvests dividends to purchase more shares!</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="bottom-banner">
+                Summary: Capital gains grow your net worth; dividends provide recurring passive income.
+            </div>
+        </div>
+
+        <!-- SLIDE 6: SPECULATION VS INVESTING -->
+        <div class="slide" data-notes="Make a clear distinction between gambling and true asset ownership. Show that systematic investing requires emotional discipline, not technical wizardry.">
+            <div class="slide-header">
+                <div class="pill-badge pill-red">RISK ASSESSMENT</div>
+                <h2 class="slide-title">Speculation vs. Long-Term Investing</h2>
+            </div>
+            <div class="slide-body">
+                <div class="grid-2">
+                    <div class="card" style="border-color: rgba(248, 113, 113, 0.25);">
+                        <div class="card-title" style="color: var(--accent-red);">Short-Term Speculation</div>
+                        <div class="card-subtitle">The Active Trading Approach</div>
+                        <ul class="bullet-list">
+                            <li>Obsessively monitoring 1-minute candlestick charts and short signals.</li>
+                            <li>Chasing social media hype, viral trends, and speculative forums.</li>
+                            <li>High emotional fatigue, sleep disruption, and panic liquidations.</li>
+                            <li><strong style="color: var(--accent-red); font-weight: 600;">Fact: Over 90% of active retail day-traders lose capital.</strong></li>
+                            <li>Operates as a high-friction zero-sum trading competition.</li>
+                        </ul>
+                    </div>
+
+                    <div class="card" style="border-color: rgba(16, 185, 129, 0.25);">
+                        <div class="card-title" style="color: var(--accent-green);">Systematic Investing</div>
+                        <div class="card-subtitle">The Wealth Builder Approach</div>
+                        <ul class="bullet-list">
+                            <li>Purchasing profitable, established enterprises and broad market indexes.</li>
+                            <li>Holding throughout multi-year economic cycles while revenues compound.</li>
+                            <li>Low maintenance: Reviewing account allocations once per month.</li>
+                            <li><strong style="color: var(--accent-green); font-weight: 600;">Fact: S&P 500 has never lost money over any rolling 20-year window.</strong></li>
+                            <li>Systematically builds wealth with minimal cognitive stress.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="bottom-banner" style="color: var(--accent-yellow);">
+                Warning: If someone guarantees overnight riches, their product is you.
+            </div>
+        </div>
+
+        <!-- SLIDE 7: COMPOUND INTEREST -->
+        <div class="slide" data-notes="Emphasize the time value of money. Compounding is exponential: the curve accelerates dramatically in decades 2 and 3.">
+            <div class="slide-header">
+                <div class="pill-badge pill-cyan">MATHEMATICAL ADVANTAGE</div>
+                <h2 class="slide-title">Compound Interest: Time Outweighs Capital</h2>
+            </div>
+            <div class="slide-body" style="gap: 20px;">
+                <div style="flex: 1; display: flex; flex-direction: column; gap: 12px;">
+                    <div class="card" style="padding: 14px 18px;">
+                        <div style="display: flex; align-items: baseline; gap: 10px;">
+                            <span style="font-size: 38px; font-weight: 800; color: var(--accent-cyan);">~10%</span>
+                            <span style="font-size: 13px; color: var(--text-secondary); font-weight: 500;">Historical Annual Return of the S&P 500 (50+ Year Track Record)</span>
+                        </div>
+                    </div>
+
+                    <div class="card" style="padding: 14px 18px;">
+                        <h4 style="color: var(--accent-green); font-size: 14px; margin-bottom: 6px; font-weight: 700;">The $100 / Month Compounding Trajectory (30 Years)</h4>
+                        <ul class="bullet-list" style="font-size: 12.5px;">
+                            <li><strong>Cash in bank (0.5% return):</strong> $36,000 deposits yield <strong>~$38,800</strong> (depreciated by inflation).</li>
+                            <li><strong>Invested in S&P 500 (~10%):</strong> Total contribution remains $36,000...</li>
+                            <li><strong style="color: var(--accent-green); font-size: 13.5px; font-weight: 700;">Total balance compounds to over $226,000+!</strong></li>
+                            <li>Over <strong>$190,000 pure profit</strong> generated strictly by compound math.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="card" style="flex: 1.1; height: 250px; padding: 12px;">
+                    <canvas id="compoundChart"></canvas>
+                </div>
+            </div>
+            <div class="bottom-banner" style="color: var(--accent-cyan);">
+                Takeaway: Starting 5 years earlier yields far greater wealth than attempting to contribute twice as much later.
+            </div>
+        </div>
+
+        <!-- SLIDE 8: SINGLE STOCKS VS ETFS -->
+        <div class="slide" data-notes="Explain that an ETF trades exactly like a stock on the open market, giving you institutional diversification with retail liquidity.">
+            <div class="slide-header">
+                <div class="pill-badge pill-purple">RISK MITIGATION</div>
+                <h2 class="slide-title">Portfolio Shield: Single Stocks vs. Index ETFs</h2>
+            </div>
+            <div class="slide-body">
+                <div class="grid-2">
+                    <div class="card">
+                        <div class="card-title" style="color: var(--accent-cyan);">Single Company Stocks</div>
+                        <div class="card-subtitle">Concentrated Corporate Exposure</div>
+                        <ul class="bullet-list">
+                            <li>Concentrated risk: Unforeseen executive decisions can drop share prices overnight.</li>
+                            <li>Requires constant review of SEC quarterly regulatory and earnings filings.</li>
+                            <li>Effective for high-conviction thematic satellite investments.</li>
+                            <li>Analogy: Placing an entire tournament outcome on one single player.</li>
+                        </ul>
+                    </div>
+
+                    <div class="card" style="border-color: rgba(16, 185, 129, 0.25);">
+                        <div class="card-title" style="color: var(--accent-green);">Exchange Traded Funds (ETFs)</div>
+                        <div class="card-subtitle">Broad Economy Exposure (e.g. S&P 500)</div>
+                        <ul class="bullet-list">
+                            <li>Instant diversification: Co-owning 500 top-tier enterprises in a single click.</li>
+                            <li>Underperforming businesses are systematically purged and replaced.</li>
+                            <li>Near-zero ongoing monitoring or management overhead required.</li>
+                            <li><strong style="color: var(--text-primary); font-weight: 600;">Recommended by Warren Buffett as the optimal strategy for 99% of investors.</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="bottom-banner" style="color: var(--accent-green);">
+                Strategy: Establish a broad index core before deploying capital into individual corporate names.
+            </div>
+        </div>
+
+        <!-- SLIDE 9: 3-STEP ENGINE -->
+        <div class="slide" data-notes="Reiterate that waiting for the 'perfect dip' usually costs more money than just setting up an automated monthly buy.">
+            <div class="slide-header">
+                <div class="pill-badge">IMPLEMENTATION</div>
+                <h2 class="slide-title">Execution: The 3-Step Investment Engine</h2>
+            </div>
+            <div class="slide-body">
+                <div class="grid-3">
+                    <div class="card">
+                        <div class="pill-badge pill-cyan" style="align-self: center;">PHASE 01</div>
+                        <div class="card-title" style="justify-content: center; font-size: 15px;">Select a Brokerage</div>
+                        <ul class="bullet-list">
+                            <li>Open an account with a regulated, zero-commission broker.</li>
+                            <li>Examples: Fidelity, Vanguard, Trading 212, Interactive Brokers.</li>
+                            <li>Account onboarding completes in under 10 minutes online.</li>
+                        </ul>
+                    </div>
+
+                    <div class="card" style="border-color: rgba(16, 185, 129, 0.25);">
+                        <div class="pill-badge" style="align-self: center;">PHASE 02</div>
+                        <div class="card-title" style="justify-content: center; font-size: 15px; color: var(--accent-green);">Fractional Shares</div>
+                        <ul class="bullet-list">
+                            <li>Capital minimum barriers no longer exist in modern markets.</li>
+                            <li>If a share costs $400, you can allocate as little as $10.</li>
+                            <li>Consistent contribution habits matter far more than upfront size.</li>
+                        </ul>
+                    </div>
+
+                    <div class="card" style="border-color: rgba(168, 85, 247, 0.25);">
+                        <div class="pill-badge pill-purple" style="align-self: center;">PHASE 03</div>
+                        <div class="card-title" style="justify-content: center; font-size: 15px; color: var(--accent-purple);">Automate (DCA)</div>
+                        <ul class="bullet-list">
+                            <li><strong>Dollar-Cost Averaging:</strong> Schedule fixed monthly deposits.</li>
+                            <li>Automatically acquires more shares during price drops.</li>
+                            <li>Eliminates emotional guesswork and market-timing paralysis.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="bottom-banner">
+                Milestone: Consistency in contribution volume consistently surpasses market-timing genius.
+            </div>
+        </div>
+
+        <!-- SLIDE 10: CONCLUSION -->
+        <div class="slide" data-notes="Conclude with clarity. Reiterate that financial independence is not a sprint, but an endurance marathon. Invite the room to ask questions or discuss specific topics.">
+            <div class="slide-header" style="text-align: center; align-items: center; margin-top: 15px;">
+                <div class="pill-badge">STRATEGIC PRINCIPLES</div>
+                <h1 class="slide-title" style="font-size: 38px; margin-top: 10px;">
+                    Start Early. Stay Rational.<br>
+                    <span class="highlight">Let Compounding Work.</span>
+                </h1>
+            </div>
+            <div class="slide-body">
+                <div class="grid-3">
+                    <div class="card">
+                        <div class="card-title" style="color: var(--accent-cyan); font-size: 15px;">01. Capital Reserve</div>
+                        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                            Never invest funds allocated for near-term obligations, rent, or emergencies. Maintain liquid reserves.
+                        </p>
+                    </div>
+
+                    <div class="card" style="border-color: rgba(16, 185, 129, 0.25);">
+                        <div class="card-title" style="color: var(--accent-green); font-size: 15px;">02. Volatility Tolerance</div>
+                        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                            Price dips are normal market breathers. Refrain from liquidating during standard corrections.
+                        </p>
+                    </div>
+
+                    <div class="card" style="border-color: rgba(168, 85, 247, 0.25);">
+                        <div class="card-title" style="color: var(--accent-purple); font-size: 15px;">03. Relentless Horizon</div>
+                        <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
+                            Time in the market systematically outperforms market timing. Let the business fundamentals do the work.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="bottom-banner" style="text-align: center; color: var(--accent-green); border-color: rgba(16, 185, 129, 0.25);">
+                Open Floor: Questions, Discussion & Portfolio Exploration
+            </div>
+        </div>
+
+        <div class="slide-counter" id="slideCounter">1 / 10</div>
+        <div class="deck-controls">
+            <button class="nav-btn" onclick="toggleNotes()">Notes (N)</button>
+            <button class="nav-btn" onclick="prevSlide()">◀ Prev</button>
+            <button class="nav-btn" onclick="nextSlide()">Next ▶</button>
+            <button class="nav-btn" onclick="toggleFullscreen()">Fullscreen (F)</button>
+        </div>
+
+        <div class="progress-bar-container">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div class="notes-drawer" id="notesDrawer">
+            <h4>Speaker Notes (For Presenter)</h4>
+            <div id="notesContent">Loading notes...</div>
+        </div>
+    </div>
+
+    <script>
+        const slides = document.querySelectorAll('.slide');
+        let currentSlide = 0;
+        const totalSlides = slides.length;
+        const progressBar = document.getElementById('progressBar');
+        const slideCounter = document.getElementById('slideCounter');
+        const notesDrawer = document.getElementById('notesDrawer');
+        const notesContent = document.getElementById('notesContent');
+
+        function updateSlide() {
+            slides.forEach((s, idx) => {
+                s.classList.toggle('active', idx === currentSlide);
+            });
+            const progress = ((currentSlide + 1) / totalSlides) * 100;
+            progressBar.style.width = progress + '%';
+            slideCounter.textContent = `${currentSlide + 1} / ${totalSlides}`;
+            notesContent.textContent = slides[currentSlide].getAttribute('data-notes') || 'No speaker notes for this slide.';
+
+            // Render chart if on slide 7 (index 6)
+            if (currentSlide === 6) {
+                renderChart();
+            }
+        }
+
+        function nextSlide() {
+            if (currentSlide < totalSlides - 1) {
+                currentSlide++;
+                updateSlide();
+            }
+        }
+
+        function prevSlide() {
+            if (currentSlide > 0) {
+                currentSlide--;
+                updateSlide();
+            }
+        }
+
+        function toggleNotes() {
+            notesDrawer.classList.toggle('open');
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => alert(err.message));
+            } else {
+                document.exitFullscreen();
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+                e.preventDefault();
+                nextSlide();
+            } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+                e.preventDefault();
+                prevSlide();
+            } else if (e.key.toLowerCase() === 'n') {
+                toggleNotes();
+            } else if (e.key.toLowerCase() === 'f') {
+                toggleFullscreen();
+            }
+        });
+
+        let chartInstance = null;
+        function renderChart() {
+            if (chartInstance) return;
+            const ctx = document.getElementById('compoundChart');
+            if (!ctx) return;
+
+            const years = ['Yr 0', 'Yr 5', 'Yr 10', 'Yr 15', 'Yr 20', 'Yr 25', 'Yr 30'];
+            const cashSaved = [0, 6000, 12000, 18000, 24000, 30000, 36000];
+            const stockInvested = [0, 7800, 20500, 41800, 76500, 133800, 226000];
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            label: 'S&P 500 (~10% Compounded)',
+                            data: stockInvested,
+                            borderColor: '#10B981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.12)',
+                            fill: true,
+                            tension: 0.4,
+                            borderWidth: 2.5,
+                            pointBackgroundColor: '#10B981',
+                            pointRadius: 4
+                        },
+                        {
+                            label: 'Regular Cash in Bank (0.5%)',
+                            data: cashSaved,
+                            borderColor: '#64748B',
+                            borderDash: [5, 5],
+                            tension: 0.1,
+                            borderWidth: 2,
+                            pointRadius: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#E2E8F0',
+                                font: { family: 'Inter', size: 11, weight: '500' }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': $' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: { color: '#94A3B8', font: { family: 'Inter', size: 10 } }
+                        },
+                        y: {
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                            ticks: {
+                                color: '#94A3B8',
+                                font: { family: 'Inter', size: 10 },
+                                callback: function(val) { return '$' + (val / 1000) + 'k'; }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        updateSlide();
+    </script>
+</body>
+</html>

@@ -462,18 +462,36 @@ wss.on('connection', (ws, req) => {
 
                     ws.send(JSON.stringify({
                         type: 'ACTION_RESULT',
+                        action: 'BUY',
+                        amount: amount,
+                        cost: cost,
                         success: true,
                         message: `Bought ${amount} slice${amount > 1 ? 's' : ''} for $${cost}!`,
                         cash: player.cash,
                         shares: player.shares
                     }));
 
+                    // Broadcast high-energy live trade event to big screen & all clients
+                    broadcast({
+                        type: 'LIVE_TRADE_EVENT',
+                        trade: {
+                            type: 'BUY',
+                            playerId: player.id,
+                            playerName: player.name,
+                            amount: amount,
+                            cost: cost,
+                            price: state.stockPrice,
+                            time: Date.now()
+                        }
+                    });
+
                     broadcastState();
                 } else {
                     ws.send(JSON.stringify({
                         type: 'ACTION_RESULT',
+                        action: 'BUY',
                         success: false,
-                        message: 'Not enough cash!'
+                        message: 'Not enough cash to buy!'
                     }));
                 }
                 return;
@@ -493,16 +511,34 @@ wss.on('connection', (ws, req) => {
 
                     ws.send(JSON.stringify({
                         type: 'ACTION_RESULT',
+                        action: 'SELL',
+                        amount: amount,
+                        revenue: revenue,
                         success: true,
                         message: `Sold ${amount} slice${amount > 1 ? 's' : ''} for +$${revenue}!`,
                         cash: player.cash,
                         shares: player.shares
                     }));
 
+                    // Broadcast high-energy live trade event to big screen & all clients
+                    broadcast({
+                        type: 'LIVE_TRADE_EVENT',
+                        trade: {
+                            type: 'SELL',
+                            playerId: player.id,
+                            playerName: player.name,
+                            amount: amount,
+                            revenue: revenue,
+                            price: state.stockPrice,
+                            time: Date.now()
+                        }
+                    });
+
                     broadcastState();
                 } else {
                     ws.send(JSON.stringify({
                         type: 'ACTION_RESULT',
+                        action: 'SELL',
                         success: false,
                         message: 'You do not have that many slices!'
                     }));
@@ -518,9 +554,23 @@ wss.on('connection', (ws, req) => {
                 player.lastAction = 'Held position (Patient)';
                 ws.send(JSON.stringify({
                     type: 'ACTION_RESULT',
+                    action: 'HOLD',
                     success: true,
-                    message: 'Holding strong!'
+                    message: 'Holding strong! 💎'
                 }));
+
+                broadcast({
+                    type: 'LIVE_TRADE_EVENT',
+                    trade: {
+                        type: 'HOLD',
+                        playerId: player.id,
+                        playerName: player.name,
+                        amount: 0,
+                        price: state.stockPrice,
+                        time: Date.now()
+                    }
+                });
+
                 broadcastState();
                 return;
             }

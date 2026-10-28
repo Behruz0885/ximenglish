@@ -273,9 +273,100 @@
         .q-blue { background: #2563EB; }
         .q-green { background: #16A34A; }
         .q-yellow { background: #D97706; }
+
+        /* Fullscreen Action Vignette Effects */
+        .vignette-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            pointer-events: none;
+            z-index: 9999;
+            opacity: 0;
+        }
+
+        .vignette-buy {
+            box-shadow: inset 0 0 70px 25px rgba(16, 185, 129, 0.7);
+            animation: vignetteFlash 0.6s ease-out forwards;
+        }
+
+        .vignette-sell {
+            box-shadow: inset 0 0 70px 25px rgba(245, 158, 11, 0.7);
+            animation: vignetteFlash 0.6s ease-out forwards;
+        }
+
+        .vignette-error {
+            box-shadow: inset 0 0 70px 25px rgba(244, 63, 94, 0.8);
+            animation: vignetteFlash 0.6s ease-out forwards;
+        }
+
+        @keyframes vignetteFlash {
+            0% { opacity: 0; }
+            35% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* Screen Shake on Error */
+        .shake-screen {
+            animation: screenShake 0.4s ease-in-out;
+        }
+
+        @keyframes screenShake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px); }
+            40%, 80% { transform: translateX(8px); }
+        }
+
+        /* Floating Action Badge */
+        .floating-action-badge {
+            position: fixed;
+            top: 45%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 16px 28px;
+            border-radius: 9999px;
+            font-size: 20px;
+            font-weight: 900;
+            color: #FFFFFF;
+            z-index: 10000;
+            pointer-events: none;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+            white-space: nowrap;
+            animation: floatActionPop 1.25s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .badge-buy-glow {
+            background: linear-gradient(135deg, #10B981, #047857);
+            border: 2px solid #34D399;
+            box-shadow: 0 10px 35px rgba(16, 185, 129, 0.7);
+        }
+
+        .badge-sell-glow {
+            background: linear-gradient(135deg, #F59E0B, #B45309);
+            border: 2px solid #FBBF24;
+            box-shadow: 0 10px 35px rgba(245, 158, 11, 0.7);
+        }
+
+        .badge-hold-glow {
+            background: linear-gradient(135deg, #A855F7, #6B21A8);
+            border: 2px solid #C084FC;
+            box-shadow: 0 10px 35px rgba(168, 85, 247, 0.7);
+        }
+
+        @keyframes floatActionPop {
+            0% { opacity: 0; transform: translate(-50%, 0%) scale(0.6); }
+            30% { opacity: 1; transform: translate(-50%, -40%) scale(1.15); }
+            70% { opacity: 1; transform: translate(-50%, -70%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -120%) scale(0.85); }
+        }
+
+        /* Tactile Button Press */
+        .btn-act:active {
+            transform: scale(0.93) !important;
+        }
     </style>
 </head>
 <body>
+    <div class="vignette-overlay" id="vignetteOverlay"></div>
+    <div id="floatingBadgeContainer"></div>
     <!-- 1. Join Screen -->
     <div class="join-screen" id="joinScreen">
         <div class="join-card">
@@ -359,6 +450,87 @@
         let currentStockPrice = 10;
         let isQuizRound = false;
 
+        // Web Audio Synthesizer for Phone
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playTone(freq, duration = 0.1, type = 'sine', gainVal = 0.25) {
+            try {
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        function sfxPlayerBuy() {
+            playTone(523.25, 0.08, 'triangle', 0.3); // C5
+            setTimeout(() => playTone(659.25, 0.12, 'sine', 0.35), 70); // E5
+            setTimeout(() => playTone(1046.50, 0.2, 'sine', 0.4), 140); // C6
+        }
+
+        function sfxPlayerSell() {
+            playTone(880, 0.07, 'sine', 0.35); // A5
+            setTimeout(() => playTone(659.25, 0.07, 'sine', 0.35), 60); // E5
+            setTimeout(() => playTone(1174.66, 0.22, 'triangle', 0.4), 130); // D6
+        }
+
+        function sfxPlayerHold() {
+            playTone(440, 0.12, 'sine', 0.25);
+            setTimeout(() => playTone(554.37, 0.2, 'sine', 0.3), 80);
+        }
+
+        function sfxPlayerError() {
+            playTone(180, 0.22, 'sawtooth', 0.35);
+        }
+
+        function triggerMobileActionEffect(actionType, text) {
+            const overlay = document.getElementById('vignetteOverlay');
+            if (overlay) {
+                overlay.className = 'vignette-overlay';
+                void overlay.offsetWidth;
+                if (actionType === 'BUY') overlay.classList.add('vignette-buy');
+                if (actionType === 'SELL') overlay.classList.add('vignette-sell');
+                if (actionType === 'HOLD') overlay.classList.add('vignette-buy');
+            }
+
+            const container = document.getElementById('floatingBadgeContainer');
+            if (container) {
+                const badge = document.createElement('div');
+                badge.className = `floating-action-badge badge-${actionType.toLowerCase()}-glow`;
+                badge.textContent = text;
+                container.appendChild(badge);
+                setTimeout(() => badge.remove(), 1300);
+            }
+        }
+
+        function triggerMobileErrorEffect(msg) {
+            const overlay = document.getElementById('vignetteOverlay');
+            if (overlay) {
+                overlay.className = 'vignette-overlay';
+                void overlay.offsetWidth;
+                overlay.classList.add('vignette-error');
+            }
+
+            const gameScreen = document.getElementById('gameScreen');
+            if (gameScreen) {
+                gameScreen.classList.remove('shake-screen');
+                void gameScreen.offsetWidth;
+                gameScreen.classList.add('shake-screen');
+                setTimeout(() => gameScreen.classList.remove('shake-screen'), 450);
+            }
+
+            if (msg) {
+                document.getElementById('statusMsg').textContent = `⚠️ ${msg}`;
+            }
+        }
+
         function connectWS() {
             const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             ws = new WebSocket(`${proto}//${window.location.host}`);
@@ -379,6 +551,26 @@
                     if (data.shares !== undefined) myData.shares = data.shares;
                     document.getElementById('statusMsg').textContent = data.message;
                     updateUI();
+
+                    if (data.success) {
+                        if (data.action === 'BUY') {
+                            triggerMobileActionEffect('BUY', `+${data.amount} Slice${data.amount > 1 ? 's' : ''}! 🍕 -$${data.cost}`);
+                            sfxPlayerBuy();
+                            if (navigator.vibrate) navigator.vibrate([40, 30, 40]);
+                        } else if (data.action === 'SELL') {
+                            triggerMobileActionEffect('SELL', `Sold ${data.amount}! 💵 +$${data.revenue}`);
+                            sfxPlayerSell();
+                            if (navigator.vibrate) navigator.vibrate([60, 40, 80]);
+                        } else if (data.action === 'HOLD') {
+                            triggerMobileActionEffect('HOLD', `Holding Strong! 💎`);
+                            sfxPlayerHold();
+                            if (navigator.vibrate) navigator.vibrate(50);
+                        }
+                    } else {
+                        triggerMobileErrorEffect(data.message);
+                        sfxPlayerError();
+                        if (navigator.vibrate) navigator.vibrate(150);
+                    }
                 }
 
                 if (data.type === 'QUIZ_RESULT') {
@@ -461,7 +653,9 @@
             if (max > 0) {
                 buyShares(max);
             } else {
-                alert('Not enough cash to buy even 1 share!');
+                triggerMobileErrorEffect('Not enough cash to buy even 1 share!');
+                sfxPlayerError();
+                if (navigator.vibrate) navigator.vibrate(150);
             }
         }
 
@@ -475,7 +669,9 @@
             if (myData.shares > 0) {
                 sellShares(myData.shares);
             } else {
-                alert('You have 0 shares to sell!');
+                triggerMobileErrorEffect('You have 0 shares to sell!');
+                sfxPlayerError();
+                if (navigator.vibrate) navigator.vibrate(150);
             }
         }
 

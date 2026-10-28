@@ -718,9 +718,186 @@
             transform: translateY(-2px);
             box-shadow: 0 0 35px rgba(56, 189, 248, 0.6);
         }
+
+        /* High-Impact Live Trade Toast & Floating Particles */
+        .trade-toast-container {
+            position: fixed;
+            top: 96px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .trade-toast-pill {
+            background: rgba(15, 23, 42, 0.96);
+            border: 2px solid var(--accent-cyan);
+            border-radius: 9999px;
+            padding: 12px 28px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 30px rgba(56, 189, 248, 0.4);
+            animation: toastPopIn 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 16px;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            backdrop-filter: blur(16px);
+        }
+
+        .trade-toast-pill.toast-buy {
+            border-color: #10B981;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 35px rgba(16, 185, 129, 0.5);
+        }
+
+        .trade-toast-pill.toast-sell {
+            border-color: #F59E0B;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 35px rgba(245, 158, 11, 0.5);
+        }
+
+        .trade-toast-pill.toast-hold {
+            border-color: #A855F7;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8), 0 0 35px rgba(168, 85, 247, 0.5);
+        }
+
+        .toast-action-tag {
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 0.05em;
+        }
+
+        .tag-buy { background: #10B981; color: #022c22; }
+        .tag-sell { background: #F59E0B; color: #451a03; }
+        .tag-hold { background: #A855F7; color: #3b0764; }
+
+        @keyframes toastPopIn {
+            0% { opacity: 0; transform: translateY(-30px) scale(0.85); }
+            70% { transform: translateY(5px) scale(1.05); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes toastFadeOut {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            100% { opacity: 0; transform: translateY(-20px) scale(0.9); }
+        }
+
+        /* Floating particles from Pizza Wheel */
+        .floating-trade-particle {
+            position: absolute;
+            font-size: 26px;
+            font-weight: 900;
+            pointer-events: none;
+            z-index: 50;
+            animation: floatUpFade 1.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            filter: drop-shadow(0 0 12px rgba(0, 0, 0, 0.9));
+        }
+
+        @keyframes floatUpFade {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            50% { transform: translateY(-50px) scale(1.35); }
+            100% { opacity: 0; transform: translateY(-110px) scale(1); }
+        }
+
+        /* Pizza Spin Impulse */
+        .pizza-spin-fast {
+            animation: pizzaFastSpin 0.85s cubic-bezier(0.25, 1, 0.5, 1) !important;
+        }
+
+        @keyframes pizzaFastSpin {
+            0% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(180deg) scale(1.14); filter: drop-shadow(0 0 45px #10B981); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .pizza-sell-pulse {
+            animation: pizzaSellFlash 0.75s cubic-bezier(0.25, 1, 0.5, 1) !important;
+        }
+
+        @keyframes pizzaSellFlash {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.12); filter: drop-shadow(0 0 45px #F59E0B); }
+            100% { transform: scale(1); }
+        }
+
+        /* Leaderboard Row Trade Highlights */
+        .tr-buy-highlight {
+            animation: buyRowGlow 2.2s ease-out forwards;
+        }
+
+        @keyframes buyRowGlow {
+            0% { background: rgba(16, 185, 129, 0.45); }
+            50% { background: rgba(16, 185, 129, 0.2); }
+            100% { background: transparent; }
+        }
+
+        .tr-sell-highlight {
+            animation: sellRowGlow 2.2s ease-out forwards;
+        }
+
+        @keyframes sellRowGlow {
+            0% { background: rgba(245, 158, 11, 0.45); }
+            50% { background: rgba(245, 158, 11, 0.2); }
+            100% { background: transparent; }
+        }
+
+        /* Live Trading Activity Stream Box */
+        .live-stream-box {
+            margin-top: 14px;
+            width: 100%;
+            background: rgba(10, 15, 30, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            overflow: hidden;
+            max-height: 125px;
+        }
+
+        .live-stream-title {
+            font-size: 11px;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            letter-spacing: 0.08em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .live-stream-list {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            overflow: hidden;
+        }
+
+        .stream-row {
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            animation: streamIn 0.3s ease-out;
+        }
+
+        @keyframes streamIn {
+            0% { opacity: 0; transform: translateX(-15px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
     </style>
 </head>
 <body>
+    <div class="trade-toast-container" id="tradeToastContainer"></div>
     <!-- Top Header -->
     <div class="arena-header">
         <div class="brand-box">
@@ -826,6 +1003,17 @@
                         <div style="text-align: right;">
                             <span style="color: var(--text-sub); display: block; font-size: 11px;">PER SHARE</span>
                             <strong style="color: var(--accent-green); font-size: 16px;" id="pizzaPerShare">$10.00</strong>
+                        </div>
+                    </div>
+
+                    <!-- Live Trade Activity Stream -->
+                    <div class="live-stream-box">
+                        <div class="live-stream-title">
+                            <span style="width: 7px; height: 7px; background: var(--accent-green); border-radius: 50%; display: inline-block;"></span>
+                            LIVE TRADE FEED
+                        </div>
+                        <div class="live-stream-list" id="liveStreamList">
+                            <div style="font-size: 11px; color: var(--text-sub); font-style: italic;" id="streamEmptyMsg">Waiting for student orders...</div>
                         </div>
                     </div>
                 </div>
@@ -965,6 +1153,131 @@
             }
         }
 
+        let lastTradedPlayerId = null;
+        let lastTradeType = null;
+
+        function escapeHtml(str) {
+            return (str || '').replace(/[&<>"']/g, m => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+            })[m]);
+        }
+
+        function sfxBuy() {
+            playChime(587.33, 0.08, 'triangle');
+            setTimeout(() => playChime(880, 0.16, 'sine'), 60);
+        }
+
+        function sfxSell() {
+            playChime(784, 0.07, 'sine');
+            setTimeout(() => playChime(659.25, 0.07, 'sine'), 50);
+            setTimeout(() => playChime(1046.50, 0.22, 'triangle'), 110);
+        }
+
+        function sfxHold() {
+            playChime(440, 0.15, 'sine');
+        }
+
+        function spawnPizzaParticle(text, color) {
+            const container = document.querySelector('.pizza-wheel-container');
+            if (!container) return;
+            const particle = document.createElement('div');
+            particle.className = 'floating-trade-particle';
+            particle.textContent = text;
+            particle.style.color = color;
+            particle.style.left = `${30 + Math.random() * 40}%`;
+            particle.style.top = `${30 + Math.random() * 40}%`;
+            container.appendChild(particle);
+            setTimeout(() => particle.remove(), 1600);
+        }
+
+        function handleLiveTrade(trade) {
+            lastTradedPlayerId = trade.playerId;
+            lastTradeType = trade.type;
+
+            // 1. Spawning Pop Toast Banner
+            const container = document.getElementById('tradeToastContainer');
+            if (container) {
+                const toast = document.createElement('div');
+                toast.className = `trade-toast-pill toast-${trade.type.toLowerCase()}`;
+
+                if (trade.type === 'BUY') {
+                    toast.innerHTML = `
+                        <span class="toast-action-tag tag-buy">BUY 🍕</span>
+                        <span><strong style="color: #FFFFFF;">${escapeHtml(trade.playerName)}</strong> bought <strong style="color: #10B981;">${trade.amount} slice${trade.amount > 1 ? 's' : ''}</strong> for <strong>$${trade.cost}</strong></span>
+                    `;
+                } else if (trade.type === 'SELL') {
+                    toast.innerHTML = `
+                        <span class="toast-action-tag tag-sell">SELL 💵</span>
+                        <span><strong style="color: #FFFFFF;">${escapeHtml(trade.playerName)}</strong> sold <strong style="color: #F59E0B;">${trade.amount} slice${trade.amount > 1 ? 's' : ''}</strong> for <strong>+$${trade.revenue}</strong></span>
+                    `;
+                } else if (trade.type === 'HOLD') {
+                    toast.innerHTML = `
+                        <span class="toast-action-tag tag-hold">HOLD 💎</span>
+                        <span><strong style="color: #FFFFFF;">${escapeHtml(trade.playerName)}</strong> held position (Diamond Hands!)</span>
+                    `;
+                }
+
+                container.appendChild(toast);
+                setTimeout(() => {
+                    toast.style.animation = 'toastFadeOut 0.4s ease-out forwards';
+                    setTimeout(() => toast.remove(), 400);
+                }, 2800);
+            }
+
+            // 2. Interactive Pizza Reaction & Sound
+            const pizzaSvg = document.querySelector('.pizza-wheel-svg');
+            if (trade.type === 'BUY') {
+                if (pizzaSvg) {
+                    pizzaSvg.classList.remove('pizza-spin-fast');
+                    void pizzaSvg.offsetWidth;
+                    pizzaSvg.classList.add('pizza-spin-fast');
+                }
+                spawnPizzaParticle(`+${trade.amount} 🍕`, '#10B981');
+                sfxBuy();
+            } else if (trade.type === 'SELL') {
+                if (pizzaSvg) {
+                    pizzaSvg.classList.remove('pizza-sell-pulse');
+                    void pizzaSvg.offsetWidth;
+                    pizzaSvg.classList.add('pizza-sell-pulse');
+                }
+                spawnPizzaParticle(`+$${trade.revenue} 💵`, '#F59E0B');
+                sfxSell();
+            } else {
+                sfxHold();
+            }
+
+            // 3. Live Activity Stream Sidebar
+            const streamList = document.getElementById('liveStreamList');
+            const emptyMsg = document.getElementById('streamEmptyMsg');
+            if (emptyMsg) emptyMsg.remove();
+
+            if (streamList) {
+                const now = new Date();
+                const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                const row = document.createElement('div');
+                row.className = 'stream-row';
+
+                let actionText = '';
+                if (trade.type === 'BUY') {
+                    actionText = `<span style="color: #10B981; font-weight: 800;">BUY +${trade.amount} ($${trade.cost})</span>`;
+                } else if (trade.type === 'SELL') {
+                    actionText = `<span style="color: #F59E0B; font-weight: 800;">SELL -${trade.amount} (+$${trade.revenue})</span>`;
+                } else {
+                    actionText = `<span style="color: #A855F7; font-weight: 800;">HOLD 💎</span>`;
+                }
+
+                row.innerHTML = `
+                    <span><span style="opacity: 0.6; font-size: 10px; margin-right: 5px;">${timeStr}</span><strong>${escapeHtml(trade.playerName)}</strong></span>
+                    ${actionText}
+                `;
+
+                streamList.insertBefore(row, streamList.firstChild);
+                while (streamList.children.length > 5) {
+                    streamList.removeChild(streamList.lastChild);
+                }
+            }
+        }
+
         // Fetch IP and QR
         fetch('/api/info')
             .then(res => res.json())
@@ -987,6 +1300,9 @@
                 const data = JSON.parse(event.data);
                 if (data.type === 'INIT_HOST' || data.type === 'STATE_UPDATE') {
                     renderState(data.state);
+                }
+                if (data.type === 'LIVE_TRADE_EVENT') {
+                    handleLiveTrade(data.trade);
                 }
             };
 
@@ -1083,6 +1399,11 @@
             tbody.innerHTML = '';
             state.players.forEach((p, idx) => {
                 const tr = document.createElement('tr');
+                if (p.id === lastTradedPlayerId) {
+                    if (lastTradeType === 'BUY') tr.className = 'tr-buy-highlight';
+                    else if (lastTradeType === 'SELL') tr.className = 'tr-sell-highlight';
+                }
+
                 let rankBadge = `<span class="rank-chip">${idx + 1}</span>`;
                 if (idx === 0) rankBadge = `<span class="rank-chip rank-1">1</span>`;
                 if (idx === 1) rankBadge = `<span class="rank-chip rank-2">2</span>`;

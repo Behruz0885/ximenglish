@@ -362,6 +362,36 @@
         .btn-act:active {
             transform: scale(0.93) !important;
         }
+
+        /* Lobby Waiting Screen */
+        .lobby-screen {
+            display: none;
+            width: 100%;
+            height: 100%;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        @keyframes pulseIcon {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.18); filter: drop-shadow(0 0 25px #10B981); }
+        }
+
+        .blinking-dot {
+            width: 8px;
+            height: 8px;
+            background: #10B981;
+            border-radius: 50%;
+            display: inline-block;
+            animation: dotBlink 1.2s infinite;
+        }
+
+        @keyframes dotBlink {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.3; transform: scale(0.65); }
+        }
     </style>
 </head>
 <body>
@@ -370,10 +400,44 @@
     <!-- 1. Join Screen -->
     <div class="join-screen" id="joinScreen">
         <div class="join-card">
-            <h2 style="font-size: 24px; font-weight: 800;">Join The Market</h2>
-            <p style="font-size: 13.5px; color: var(--text-secondary);">Enter your name to receive your starting $100 cash:</p>
-            <input type="text" id="nameInput" class="input-name" placeholder="Your Name" maxlength="15" autocomplete="off">
-            <button class="btn-join" onclick="joinGame()">ENTER GAME 🚀</button>
+            <h2 style="font-size: 24px; font-weight: 800; color: #FFFFFF;">Join The Market</h2>
+            <p style="font-size: 13.5px; color: var(--text-secondary); margin-top: 4px;">Enter Game PIN and your name to join:</p>
+            
+            <div style="margin-top: 14px; text-align: left;">
+                <label style="font-size: 11px; font-weight: 800; color: var(--accent-cyan); letter-spacing: 0.08em; display: block; margin-bottom: 5px;">GAME PIN (FROM SCREEN)</label>
+                <input type="text" id="pinInput" class="input-name" placeholder="PIN (e.g. 7492)" maxlength="6" autocomplete="off" style="letter-spacing: 0.16em; font-weight: 900; font-size: 22px; text-align: center;">
+            </div>
+
+            <div style="margin-top: 14px; text-align: left;">
+                <label style="font-size: 11px; font-weight: 800; color: var(--text-secondary); letter-spacing: 0.08em; display: block; margin-bottom: 5px;">STUDENT NAME</label>
+                <input type="text" id="nameInput" class="input-name" placeholder="Your Name" maxlength="15" autocomplete="off">
+            </div>
+
+            <div id="joinErrorMsg" style="color: var(--accent-red); font-size: 13px; font-weight: 700; display: none; margin-top: 12px; background: rgba(244, 63, 94, 0.15); padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(244, 63, 94, 0.3);"></div>
+
+            <button class="btn-join" onclick="joinGame()" style="margin-top: 18px;">ENTER GAME 🚀</button>
+        </div>
+    </div>
+
+    <!-- 1.5 Lobby Waiting Screen (Locked Before Game Starts) -->
+    <div class="lobby-screen" id="lobbyWaitScreen">
+        <div class="join-card" style="text-align: center; padding: 36px 20px;">
+            <div style="font-size: 56px; margin-bottom: 14px; animation: pulseIcon 1.5s infinite;">🍕</div>
+            <h2 style="font-size: 24px; font-weight: 900; color: #FFFFFF;">You're In!</h2>
+            <div style="font-size: 20px; font-weight: 800; color: var(--accent-cyan); margin: 6px 0;" id="waitPlayerName">Investor</div>
+            <div style="font-size: 14px; color: var(--accent-green); font-weight: 700; margin-bottom: 18px;">$100 Starting Cash Loaded 💵</div>
+            
+            <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 18px 14px;">
+                <div style="font-size: 14px; color: #FFFFFF; font-weight: 700; margin-bottom: 4px;">
+                    Look at the big screen!
+                </div>
+                <div style="font-size: 13px; color: var(--text-secondary); line-height: 1.4;">
+                    Waiting for the teacher to start the game. Trading will unlock automatically!
+                </div>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 14px; font-size: 12px; color: var(--accent-cyan); font-weight: 800;">
+                    <span class="blinking-dot"></span> Waiting in Lobby...
+                </div>
+            </div>
         </div>
     </div>
 
@@ -538,11 +602,31 @@
             ws.onmessage = (event) => {
                 const data = JSON.parse(event.data);
 
+                if (data.type === 'JOIN_ERROR') {
+                    const errorEl = document.getElementById('joinErrorMsg');
+                    if (errorEl) {
+                        errorEl.textContent = data.message;
+                        errorEl.style.display = 'block';
+                    }
+                    triggerMobileErrorEffect(data.message);
+                    sfxPlayerError();
+                    if (navigator.vibrate) navigator.vibrate(150);
+                    return;
+                }
+
                 if (data.type === 'JOIN_SUCCESS') {
                     myData = data.player;
                     document.getElementById('joinScreen').style.display = 'none';
-                    document.getElementById('gameScreen').style.display = 'flex';
                     document.getElementById('playerNameTag').textContent = myData.name;
+                    document.getElementById('waitPlayerName').textContent = myData.name;
+
+                    if (data.state.phase === 'LOBBY') {
+                        document.getElementById('lobbyWaitScreen').style.display = 'flex';
+                        document.getElementById('gameScreen').style.display = 'none';
+                    } else {
+                        document.getElementById('lobbyWaitScreen').style.display = 'none';
+                        document.getElementById('gameScreen').style.display = 'flex';
+                    }
                     updateUI();
                 }
 
@@ -591,6 +675,27 @@
                         }
                     }
 
+                    // Lobby vs In-Game screen toggle (Block play before game starts)
+                    const inLobby = data.state.phase === 'LOBBY';
+                    const lobbyScreen = document.getElementById('lobbyWaitScreen');
+                    const gameScreen = document.getElementById('gameScreen');
+
+                    if (myData.name) {
+                        if (inLobby) {
+                            lobbyScreen.style.display = 'flex';
+                            gameScreen.style.display = 'none';
+                        } else {
+                            if (lobbyScreen.style.display === 'flex') {
+                                // Transition from Lobby to Game!
+                                sfxPlayerBuy();
+                                if (navigator.vibrate) navigator.vibrate([60, 40, 100]);
+                                triggerMobileActionEffect('HOLD', 'GAME STARTED! 🚀');
+                            }
+                            lobbyScreen.style.display = 'none';
+                            gameScreen.style.display = 'flex';
+                        }
+                    }
+
                     isQuizRound = data.state.phase.startsWith('ROUND_5_QUIZ') || data.state.phase.startsWith('ROUND_6_QUIZ');
 
                     const tradingPanel = document.getElementById('tradingActionsPanel');
@@ -632,13 +737,29 @@
         }
 
         function joinGame() {
+            const pin = document.getElementById('pinInput').value.trim();
             const name = document.getElementById('nameInput').value.trim();
-            if (!name) {
-                alert('Please enter your name!');
+            const errorEl = document.getElementById('joinErrorMsg');
+
+            if (!pin) {
+                errorEl.textContent = 'Katta ekrandagi 4 xonali Game PIN kodni kiriting!';
+                errorEl.style.display = 'block';
+                triggerMobileErrorEffect();
+                sfxPlayerError();
                 return;
             }
+
+            if (!name) {
+                errorEl.textContent = 'Iltimos, ismingizni kiriting!';
+                errorEl.style.display = 'block';
+                triggerMobileErrorEffect();
+                sfxPlayerError();
+                return;
+            }
+
+            errorEl.style.display = 'none';
             if (ws && ws.readyState === WebSocket.OPEN) {
-                ws.send(JSON.stringify({ type: 'PLAYER_JOIN', name }));
+                ws.send(JSON.stringify({ type: 'PLAYER_JOIN', pin, name }));
             }
         }
 
@@ -687,8 +808,19 @@
             }
         }
 
+        // Auto-fill PIN from query param (?pin=1234)
+        const urlParams = new URLSearchParams(window.location.search);
+        const pinFromUrl = urlParams.get('pin');
+        if (pinFromUrl) {
+            const pinInput = document.getElementById('pinInput');
+            if (pinInput) pinInput.value = pinFromUrl;
+        }
+
         // Enter key to join
         document.getElementById('nameInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') joinGame();
+        });
+        document.getElementById('pinInput').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') joinGame();
         });
 

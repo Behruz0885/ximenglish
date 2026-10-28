@@ -48,8 +48,14 @@ function resolveJoinUrl(req) {
     return `http://${localIP}:${PORT}`;
 }
 
+// Helper: Generate 4-digit Game PIN
+function generateGamePin() {
+    return Math.floor(1000 + Math.random() * 9000).toString();
+}
+
 // Game State
 const state = {
+    gamePin: generateGamePin(),
     phase: 'LOBBY', // LOBBY, ROUND_1_IPO, ROUND_2_RALLY, ROUND_3_DIP, ROUND_4_DIVIDEND, ROUND_5_QUIZ_1, ROUND_6_QUIZ_2, GAME_OVER
     stockName: 'Nova Pizza Inc.',
     stockPrice: 10,
@@ -73,17 +79,25 @@ const server = http.createServer(async (req, res) => {
         return res.end(JSON.stringify({ status: 'ok', uptime: Math.floor(process.uptime()), memory: process.memoryUsage().rss }));
     }
 
-    // Dynamic join URL & QR code endpoint
+    // Dynamic join URL & QR code endpoint (includes ?pin=XXXX)
     if (url === '/api/info') {
         const currentJoinUrl = resolveJoinUrl(req);
+        const joinUrlWithPin = `${currentJoinUrl}?pin=${state.gamePin}`;
         let qrDataUrl = '';
         try {
-            qrDataUrl = await QRCode.toDataURL(currentJoinUrl, { width: 300, margin: 2 });
+            qrDataUrl = await QRCode.toDataURL(joinUrlWithPin, { width: 300, margin: 2 });
         } catch (e) {
             console.error('QR code generation error:', e);
         }
         res.writeHead(200, { 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify({ localIP, port: PORT, joinUrl: currentJoinUrl, qrDataUrl }));
+        return res.end(JSON.stringify({ 
+            localIP, 
+            port: PORT, 
+            joinUrl: currentJoinUrl, 
+            gamePin: state.gamePin,
+            joinUrlWithPin,
+            qrDataUrl 
+        }));
     }
 
     // Big Screen Arena
@@ -170,6 +184,7 @@ function broadcastState() {
     broadcast({
         type: 'STATE_UPDATE',
         state: {
+            gamePin: state.gamePin,
             phase: state.phase,
             stockName: state.stockName,
             stockPrice: state.stockPrice,
@@ -316,6 +331,7 @@ function setRound(idx) {
 
 function resetGame() {
     currentRoundIndex = -1;
+    state.gamePin = generateGamePin();
     state.phase = 'LOBBY';
     state.stockPrice = 10;
     state.roundNumber = 0;
@@ -366,7 +382,9 @@ wss.on('connection', (ws, req) => {
                     joinUrl: dynamicJoinUrl,
                     localIP,
                     port: PORT,
+                    gamePin: state.gamePin,
                     state: {
+                        gamePin: state.gamePin,
                         phase: state.phase,
                         stockName: state.stockName,
                         stockPrice: state.stockPrice,
@@ -403,8 +421,17 @@ wss.on('connection', (ws, req) => {
                 return;
             }
 
-            // PLAYER JOIN
+            // PLAYER JOIN (Requires valid Game PIN)
             if (data.type === 'PLAYER_JOIN') {
+                const clientPin = (data.pin || '').toString().trim();
+                if (clientPin !== state.gamePin) {
+                    ws.send(JSON.stringify({
+                        type: 'JOIN_ERROR',
+                        message: 'Noto‘g‘ri Game PIN! Katta ekrandagi 4 xonali kodni kiriting.'
+                    }));
+                    return;
+                }
+
                 playerId = 'p_' + Math.random().toString(36).substring(2, 9);
                 const name = (data.name || 'Investor').trim().substring(0, 16);
                 const avatar = data.avatar || 'PizzaIcon';
@@ -435,6 +462,7 @@ wss.on('connection', (ws, req) => {
                     },
                     state: {
                         phase: state.phase,
+                        gamePin: state.gamePin,
                         stockName: state.stockName,
                         stockPrice: state.stockPrice,
                         roundNumber: state.roundNumber,
@@ -445,6 +473,28 @@ wss.on('connection', (ws, req) => {
 
                 broadcastState();
                 return;
+            }
+
+            // BLOCK TRADING BEFORE GAME STARTS OR WHEN FINISHED
+            if (data.type === 'PLAYER_BUY' || data.type === 'PLAYER_SELL' || data.type === 'PLAYER_HOLD') {
+                if (state.phase === 'LOBBY') {
+                    ws.send(JSON.stringify({
+                        type: 'ACTION_RESULT',
+                        action: data.type.replace('PLAYER_', ''),
+                        success: false,
+                        message: 'O‘yin hali boshlanmadi! O‘qituvchi boshlashini kuting.'
+                    }));
+                    return;
+                }
+                if (state.phase === 'GAME_OVER') {
+                    ws.send(JSON.stringify({
+                        type: 'ACTION_RESULT',
+                        action: data.type.replace('PLAYER_', ''),
+                        success: false,
+                        message: 'O‘yin yakunlandi! Natijalarni katta ekranda ko‘ring.'
+                    }));
+                    return;
+                }
             }
 
             // BUY SHARES

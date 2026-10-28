@@ -894,6 +894,58 @@
             0% { opacity: 0; transform: translateX(-15px); }
             100% { opacity: 1; transform: translateX(0); }
         }
+
+        /* Game PIN Badges */
+        .pin-header-badge {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            border-radius: 10px;
+            padding: 6px 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 12px;
+            font-weight: 900;
+            color: #34D399;
+            letter-spacing: 0.05em;
+        }
+
+        .pin-header-badge span:last-child {
+            color: #FFFFFF;
+            font-family: 'Montserrat', sans-serif;
+            font-size: 18px;
+            letter-spacing: 0.12em;
+        }
+
+        .game-pin-card {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.25));
+            border: 2px solid #10B981;
+            border-radius: 16px;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 10px;
+            width: 86%;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.35);
+        }
+
+        .game-pin-label {
+            font-size: 13px;
+            font-weight: 900;
+            color: #34D399;
+            letter-spacing: 0.12em;
+        }
+
+        .game-pin-number {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 36px;
+            font-weight: 900;
+            letter-spacing: 0.2em;
+            color: #FFFFFF;
+            text-shadow: 0 0 20px rgba(16, 185, 129, 0.9);
+        }
     </style>
 </head>
 <body>
@@ -910,9 +962,15 @@
             <span class="stock-price-huge" id="stockPriceDisplay">$10.00</span>
         </div>
 
-        <div class="player-counter-box">
-            <span>INVESTORS:</span>
-            <div class="player-counter-badge" id="playerCount">0 Connected</div>
+        <div style="display: flex; align-items: center; gap: 14px;">
+            <div class="pin-header-badge">
+                <span>GAME PIN:</span>
+                <span id="headerPinDisplay">----</span>
+            </div>
+            <div class="player-counter-box">
+                <span>INVESTORS:</span>
+                <div class="player-counter-badge" id="playerCount">0 Connected</div>
+            </div>
         </div>
     </div>
 
@@ -922,11 +980,18 @@
         <div class="lobby-view" id="lobbyView">
             <div class="qr-hero-card">
                 <div style="font-size: 13px; font-weight: 800; color: var(--accent-cyan); letter-spacing: 0.1em;">CONNECT TO ARENA</div>
-                <h2 style="font-size: 26px; font-weight: 900;">Scan with Phone Camera</h2>
+                <h2 style="font-size: 24px; font-weight: 900;">Scan with Phone Camera</h2>
                 <div class="qr-img-box">
                     <img id="qrImg" alt="QR Code" src="">
                 </div>
-                <div style="font-size: 12px; color: var(--text-sub);">Or open this link on your phone:</div>
+
+                <!-- HUGE GAME PIN DISPLAY -->
+                <div class="game-pin-card">
+                    <div class="game-pin-label">GAME PIN:</div>
+                    <div class="game-pin-number" id="gamePinDisplay">----</div>
+                </div>
+
+                <div style="font-size: 12px; color: var(--text-sub); margin-top: 8px;">Or open link on phone:</div>
                 <div class="url-box" id="joinUrlText">http://...</div>
             </div>
 
@@ -1278,11 +1343,17 @@
             }
         }
 
-        // Fetch IP and QR
+        // Fetch IP, Game PIN, and QR
         fetch('/api/info')
             .then(res => res.json())
             .then(data => {
                 document.getElementById('joinUrlText').textContent = data.joinUrl;
+                if (data.gamePin) {
+                    const pinEl = document.getElementById('gamePinDisplay');
+                    const headPinEl = document.getElementById('headerPinDisplay');
+                    if (pinEl) pinEl.textContent = data.gamePin;
+                    if (headPinEl) headPinEl.textContent = data.gamePin;
+                }
                 if (data.qrDataUrl) {
                     document.getElementById('qrImg').src = data.qrDataUrl;
                 }
@@ -1310,6 +1381,13 @@
         }
 
         function renderState(state) {
+            if (state.gamePin) {
+                const pinEl = document.getElementById('gamePinDisplay');
+                const headPinEl = document.getElementById('headerPinDisplay');
+                if (pinEl) pinEl.textContent = state.gamePin;
+                if (headPinEl) headPinEl.textContent = state.gamePin;
+            }
+
             // Price Animation & Styling
             const priceEl = document.getElementById('stockPriceDisplay');
             priceEl.textContent = `$${state.stockPrice.toFixed(2)}`;

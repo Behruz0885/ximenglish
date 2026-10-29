@@ -66,6 +66,8 @@ const state = {
     dividendAmount: 0,
     quizQuestion: null,
     quizActive: false,
+    quizRevealed: false,
+    quizAnswers: new Map(), // playerId -> { answerIndex, isCorrect, time, name }
     players: new Map() // id -> { id, name, avatar, cash, shares, quizScore, lastAction, connected }
 };
 
@@ -180,7 +182,38 @@ function broadcast(msg) {
     });
 }
 
+function getQuizCounts() {
+    const counts = [0, 0, 0, 0];
+    state.quizAnswers.forEach(ans => {
+        if (ans.answerIndex >= 0 && ans.answerIndex < 4) {
+            counts[ans.answerIndex]++;
+        }
+    });
+    return counts;
+}
+
+function broadcastQuizProgress() {
+    broadcast({
+        type: 'QUIZ_PROGRESS_UPDATE',
+        totalPlayers: state.players.size,
+        answeredCount: state.quizAnswers.size,
+        answeredPlayerNames: Array.from(state.quizAnswers.values()).map(a => a.name)
+    });
+}
+
 function broadcastState() {
+    let broadcastQuiz = null;
+    if (state.quizActive && state.quizQuestion) {
+        broadcastQuiz = {
+            question: state.quizQuestion.question,
+            options: state.quizQuestion.options,
+            reward: state.quizQuestion.reward,
+            revealed: state.quizRevealed,
+            correct: state.quizRevealed ? state.quizQuestion.correct : null,
+            counts: state.quizRevealed ? getQuizCounts() : null
+        };
+    }
+
     broadcast({
         type: 'STATE_UPDATE',
         state: {
@@ -193,7 +226,14 @@ function broadcastState() {
             newsHeadline: state.newsHeadline,
             newsDetails: state.newsDetails,
             dividendAmount: state.dividendAmount,
-            quizQuestion: state.quizActive ? state.quizQuestion : null,
+            quizQuestion: broadcastQuiz,
+            quizProgress: state.quizActive ? {
+                totalPlayers: state.players.size,
+                answeredCount: state.quizAnswers.size,
+                revealed: state.quizRevealed,
+                counts: state.quizRevealed ? getQuizCounts() : null,
+                answeredPlayerNames: Array.from(state.quizAnswers.values()).map(a => a.name)
+            } : null,
             players: getPlayersList()
         }
     });
@@ -248,10 +288,10 @@ const ROUNDS = [
         quiz: {
             question: 'What is an S&P 500 ETF (Index Fund)?',
             options: [
-                'A) Buying 1 hyped cryptocurrency',
-                'B) Owning the top 500 biggest companies at once',
-                'C) A bank loan with high interest',
-                'D) A lottery ticket'
+                'Buying 1 hyped cryptocurrency',
+                'Owning the top 500 biggest companies at once',
+                'A bank loan with high interest',
+                'A lottery ticket'
             ],
             correct: 1,
             reward: 30
@@ -268,10 +308,10 @@ const ROUNDS = [
         quiz: {
             question: 'If you own 1 share of Apple, who does CEO Tim Cook work for?',
             options: [
-                'A) Only for himself',
-                'B) The bank',
-                'C) For YOU (the shareholder/owner)',
-                'D) Nobody'
+                'Only for himself',
+                'The bank manager',
+                'For YOU (the shareholder/owner)',
+                'Nobody'
             ],
             correct: 2,
             reward: 40
@@ -321,9 +361,13 @@ function setRound(idx) {
     if (r.quiz) {
         state.quizQuestion = r.quiz;
         state.quizActive = true;
+        state.quizRevealed = false;
+        state.quizAnswers.clear();
     } else {
         state.quizQuestion = null;
         state.quizActive = false;
+        state.quizRevealed = false;
+        state.quizAnswers.clear();
     }
 
     broadcastState();
@@ -341,9 +385,42 @@ function resetGame() {
     state.dividendAmount = 0;
     state.quizQuestion = null;
     state.quizActive = false;
+    state.quizRevealed = false;
+    state.quizAnswers.clear();
 
     // Clear all player sessions completely for clean classroom reset
     state.players.clear();
+
+    broadcastState();
+}
+
+function revealQuizAnswer() {
+    if (!state.quizActive || !state.quizQuestion || state.quizRevealed) return;
+    state.quizRevealed = true;
+
+    const counts = getQuizCounts();
+
+    // Award cash & quizScore to correct answers (once!)
+    state.quizAnswers.forEach((ans, pid) => {
+        const p = state.players.get(pid);
+        if (p) {
+            if (ans.isCorrect) {
+                p.cash += state.quizQuestion.reward;
+                p.quizScore = (p.quizScore || 0) + state.quizQuestion.reward;
+                p.lastAction = `Correct Quiz! +$${state.quizQuestion.reward}`;
+            } else {
+                p.lastAction = 'Quiz Incorrect';
+            }
+        }
+    });
+
+    broadcast({
+        type: 'QUIZ_REVEAL_EVENT',
+        correctIndex: state.quizQuestion.correct,
+        counts: counts,
+        reward: state.quizQuestion.reward,
+        totalAnswered: state.quizAnswers.size
+    });
 
     broadcastState();
 }
@@ -377,6 +454,17 @@ wss.on('connection', (ws, req) => {
             if (data.type === 'HOST_CONNECT') {
                 ws.isHost = true;
                 const dynamicJoinUrl = resolveJoinUrl(req);
+                let hostQuiz = null;
+                if (state.quizActive && state.quizQuestion) {
+                    hostQuiz = {
+                        question: state.quizQuestion.question,
+                        options: state.quizQuestion.options,
+                        reward: state.quizQuestion.reward,
+                        revealed: state.quizRevealed,
+                        correct: state.quizRevealed ? state.quizQuestion.correct : null,
+                        counts: state.quizRevealed ? getQuizCounts() : null
+                    };
+                }
                 ws.send(JSON.stringify({
                     type: 'INIT_HOST',
                     joinUrl: dynamicJoinUrl,
@@ -393,7 +481,14 @@ wss.on('connection', (ws, req) => {
                         newsHeadline: state.newsHeadline,
                         newsDetails: state.newsDetails,
                         dividendAmount: state.dividendAmount,
-                        quizQuestion: state.quizActive ? state.quizQuestion : null,
+                        quizQuestion: hostQuiz,
+                        quizProgress: state.quizActive ? {
+                            totalPlayers: state.players.size,
+                            answeredCount: state.quizAnswers.size,
+                            revealed: state.quizRevealed,
+                            counts: state.quizRevealed ? getQuizCounts() : null,
+                            answeredPlayerNames: Array.from(state.quizAnswers.values()).map(a => a.name)
+                        } : null,
                         players: getPlayersList()
                     }
                 }));
@@ -401,8 +496,21 @@ wss.on('connection', (ws, req) => {
             }
 
             if (data.type === 'HOST_NEXT_ROUND') {
+                // If currently in an active unrevealed quiz, clicking Next Round reveals the answer first!
+                if (state.quizActive && !state.quizRevealed) {
+                    revealQuizAnswer();
+                    return;
+                }
+
                 if (currentRoundIndex < ROUNDS.length - 1) {
                     setRound(currentRoundIndex + 1);
+                }
+                return;
+            }
+
+            if (data.type === 'HOST_REVEAL_QUIZ') {
+                if (state.quizActive && !state.quizRevealed) {
+                    revealQuizAnswer();
                 }
                 return;
             }
@@ -629,28 +737,38 @@ wss.on('connection', (ws, req) => {
             if (data.type === 'PLAYER_QUIZ_ANSWER') {
                 const player = state.players.get(ws.playerId);
                 if (!player || !state.quizActive || !state.quizQuestion) return;
+                if (state.quizRevealed) return; // Cannot answer after reveal
+
+                // Strictly prevent duplicate submissions / point spamming!
+                if (state.quizAnswers.has(ws.playerId)) {
+                    ws.send(JSON.stringify({
+                        type: 'QUIZ_SUBMIT_CONFIRM',
+                        alreadySubmitted: true,
+                        message: 'Siz allaqachon javob bergansiz! Natijani kuting.'
+                    }));
+                    return;
+                }
 
                 const answerIndex = parseInt(data.answer);
-                if (answerIndex === state.quizQuestion.correct) {
-                    player.cash += state.quizQuestion.reward;
-                    player.quizScore = (player.quizScore || 0) + state.quizQuestion.reward;
-                    player.lastAction = `Correct Quiz! +$${state.quizQuestion.reward}`;
+                const isCorrect = (answerIndex === state.quizQuestion.correct);
 
-                    ws.send(JSON.stringify({
-                        type: 'QUIZ_RESULT',
-                        correct: true,
-                        reward: state.quizQuestion.reward,
-                        message: `Correct! +$${state.quizQuestion.reward} Cash added to balance!`
-                    }));
-                } else {
-                    player.lastAction = 'Answered quiz incorrectly';
-                    ws.send(JSON.stringify({
-                        type: 'QUIZ_RESULT',
-                        correct: false,
-                        message: 'Incorrect, but good effort!'
-                    }));
-                }
-                broadcastState();
+                state.quizAnswers.set(ws.playerId, {
+                    answerIndex: answerIndex,
+                    isCorrect: isCorrect,
+                    time: Date.now(),
+                    name: player.name
+                });
+
+                player.lastAction = 'Answered Quiz';
+
+                ws.send(JSON.stringify({
+                    type: 'QUIZ_SUBMIT_CONFIRM',
+                    answerIndex: answerIndex,
+                    message: 'Javobingiz qabul qilindi! 🔒 O‘qituvchi natijalarni ochishini kuting...'
+                }));
+
+                // Broadcast live progress counter to host & players without wiping UI state
+                broadcastQuizProgress();
                 return;
             }
 

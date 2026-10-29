@@ -247,26 +247,56 @@
         .quiz-controller {
             display: none;
             flex-direction: column;
-            gap: 12px;
+            gap: 14px;
             flex: 1;
             justify-content: center;
         }
 
         .quiz-btn {
             border: none;
-            padding: 20px;
-            border-radius: 14px;
+            padding: 22px 20px;
+            border-radius: 16px;
             font-family: inherit;
-            font-size: 20px;
-            font-weight: 800;
+            font-size: 22px;
+            font-weight: 900;
             color: white;
             cursor: pointer;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
-            transition: transform 0.15s;
+            transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
         }
 
         .quiz-btn:active {
             transform: scale(0.96);
+        }
+
+        .quiz-btn.btn-locked-in {
+            border: 3.5px solid #FCD34D !important;
+            box-shadow: 0 0 35px rgba(245, 158, 11, 0.8) !important;
+            transform: scale(1.03) !important;
+        }
+
+        .quiz-btn.btn-dimmed {
+            opacity: 0.35 !important;
+            pointer-events: none !important;
+            transform: scale(0.97) !important;
+        }
+
+        .quiz-btn.btn-win-glow {
+            border: 3.5px solid #34D399 !important;
+            box-shadow: 0 0 40px rgba(16, 185, 129, 0.9) !important;
+            background: #059669 !important;
+            transform: scale(1.03) !important;
+        }
+
+        .quiz-btn.btn-loss-glow {
+            border: 3.5px solid #F87171 !important;
+            background: #991B1B !important;
+            opacity: 0.7;
         }
 
         .q-red { background: #DC2626; }
@@ -501,10 +531,10 @@
             <div style="font-size: 13px; color: var(--text-secondary); text-align: center; margin-bottom: 4px;">
                 Look at the big screen & tap your answer:
             </div>
-            <button class="quiz-btn q-red" onclick="sendQuizAnswer(0)">A</button>
-            <button class="quiz-btn q-blue" onclick="sendQuizAnswer(1)">B</button>
-            <button class="quiz-btn q-green" onclick="sendQuizAnswer(2)">C</button>
-            <button class="quiz-btn q-yellow" onclick="sendQuizAnswer(3)">D</button>
+            <button class="quiz-btn q-red" id="qBtn0" onclick="sendQuizAnswer(0)">A</button>
+            <button class="quiz-btn q-blue" id="qBtn1" onclick="sendQuizAnswer(1)">B</button>
+            <button class="quiz-btn q-green" id="qBtn2" onclick="sendQuizAnswer(2)">C</button>
+            <button class="quiz-btn q-yellow" id="qBtn3" onclick="sendQuizAnswer(3)">D</button>
         </div>
     </div>
 
@@ -513,6 +543,9 @@
         let myData = { cash: 100, shares: 0 };
         let currentStockPrice = 10;
         let isQuizRound = false;
+        let mySelectedQuizAnswer = null;
+        let quizLocked = false;
+        let currentPhase = null;
 
         // Web Audio Synthesizer for Phone
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -657,13 +690,56 @@
                     }
                 }
 
-                if (data.type === 'QUIZ_RESULT') {
-                    document.getElementById('statusMsg').textContent = data.message;
-                    updateUI();
+                if (data.type === 'QUIZ_SUBMIT_CONFIRM') {
+                    if (data.alreadySubmitted) {
+                        triggerMobileErrorEffect(data.message);
+                    } else {
+                        document.getElementById('statusMsg').textContent = data.message;
+                    }
+                }
+
+                if (data.type === 'QUIZ_REVEAL_EVENT') {
+                    const letters = ['A', 'B', 'C', 'D'];
+                    const correctLetter = letters[data.correctIndex];
+
+                    if (mySelectedQuizAnswer !== null) {
+                        const isCorrect = (mySelectedQuizAnswer === data.correctIndex);
+                        const chosenBtn = document.getElementById(`qBtn${mySelectedQuizAnswer}`);
+
+                        if (isCorrect) {
+                            if (chosenBtn) {
+                                chosenBtn.classList.remove('btn-locked-in', 'btn-dimmed');
+                                chosenBtn.classList.add('btn-win-glow');
+                                chosenBtn.innerHTML = `${letters[mySelectedQuizAnswer]} <span style="font-size: 13px;">✔ CORRECT (+$${data.reward})</span>`;
+                            }
+                            triggerMobileActionEffect('BUY', `🎉 CORRECT! +$${data.reward} CASH! 💵`);
+                            sfxPlayerBuy();
+                            if (navigator.vibrate) navigator.vibrate([60, 40, 100]);
+                            document.getElementById('statusMsg').textContent = `🏆 Brilliant! You earned +$${data.reward} cash bonus!`;
+                        } else {
+                            if (chosenBtn) {
+                                chosenBtn.classList.remove('btn-locked-in', 'btn-dimmed');
+                                chosenBtn.classList.add('btn-loss-glow');
+                                chosenBtn.innerHTML = `${letters[mySelectedQuizAnswer]} <span style="font-size: 13px;">✖ WRONG</span>`;
+                            }
+                            triggerMobileErrorEffect(`Incorrect! Correct answer was [${correctLetter}]`);
+                            sfxPlayerError();
+                            if (navigator.vibrate) navigator.vibrate(150);
+                            document.getElementById('statusMsg').textContent = `❌ Not quite! The correct answer was [${correctLetter}]. Look at big screen!`;
+                        }
+                    } else {
+                        document.getElementById('statusMsg').textContent = `⏰ Time's up! Correct answer was [${correctLetter}]. Look at big screen!`;
+                    }
                 }
 
                 if (data.type === 'STATE_UPDATE') {
                     currentStockPrice = data.state.stockPrice;
+
+                    // Detect round/phase transitions & reset quiz UI
+                    if (data.state.phase !== currentPhase) {
+                        currentPhase = data.state.phase;
+                        resetQuizState();
+                    }
 
                     // Check if self is in players
                     if (myData.id) {
@@ -704,7 +780,9 @@
                     if (isQuizRound) {
                         tradingPanel.style.display = 'none';
                         quizPanel.style.display = 'flex';
-                        document.getElementById('statusMsg').textContent = 'Speed Quiz Active! Tap your answer!';
+                        if (!quizLocked) {
+                            document.getElementById('statusMsg').textContent = 'Speed Quiz Active! Tap your answer!';
+                        }
                     } else if (data.state.phase === 'GAME_OVER') {
                         tradingPanel.style.display = 'none';
                         quizPanel.style.display = 'none';
@@ -802,7 +880,46 @@
             }
         }
 
+        function resetQuizState() {
+            quizLocked = false;
+            mySelectedQuizAnswer = null;
+            const letters = ['A', 'B', 'C', 'D'];
+            for (let i = 0; i < 4; i++) {
+                const btn = document.getElementById(`qBtn${i}`);
+                if (btn) {
+                    btn.className = `quiz-btn q-${['red', 'blue', 'green', 'yellow'][i]}`;
+                    btn.textContent = letters[i];
+                    btn.style.pointerEvents = 'auto';
+                }
+            }
+        }
+
         function sendQuizAnswer(ansIdx) {
+            if (quizLocked) return;
+            quizLocked = true;
+            mySelectedQuizAnswer = ansIdx;
+
+            const letters = ['A', 'B', 'C', 'D'];
+            const letter = letters[ansIdx];
+
+            for (let i = 0; i < 4; i++) {
+                const btn = document.getElementById(`qBtn${i}`);
+                if (btn) {
+                    btn.style.pointerEvents = 'none';
+                    if (i === ansIdx) {
+                        btn.classList.add('btn-locked-in');
+                        btn.innerHTML = `${letter} <span style="font-size: 13px; font-weight: 900; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 6px;">🔒 LOCKED IN</span>`;
+                    } else {
+                        btn.classList.add('btn-dimmed');
+                    }
+                }
+            }
+
+            document.getElementById('statusMsg').textContent = `🔒 Answer [${letter}] locked in! Waiting for teacher to reveal...`;
+            triggerMobileActionEffect('HOLD', `Answer [${letter}] Locked! 🔒`);
+            playTone(659.25, 0.15, 'triangle', 0.35);
+            if (navigator.vibrate) navigator.vibrate([40, 30]);
+
             if (ws && ws.readyState === WebSocket.OPEN) {
                 ws.send(JSON.stringify({ type: 'PLAYER_QUIZ_ANSWER', answer: ansIdx }));
             }

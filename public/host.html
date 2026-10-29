@@ -517,8 +517,9 @@
             align-items: center;
             justify-content: center;
             height: 100%;
-            gap: 36px;
+            gap: 20px;
             text-align: center;
+            padding: 10px 0;
         }
 
         .quiz-title-badge {
@@ -532,13 +533,85 @@
             text-transform: uppercase;
         }
 
+        .quiz-reward-pill {
+            font-size: 13px;
+            font-weight: 900;
+            color: var(--accent-gold);
+            background: rgba(245, 158, 11, 0.15);
+            padding: 6px 16px;
+            border-radius: 100px;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            letter-spacing: 0.05em;
+        }
+
         .quiz-headline {
             font-family: 'Montserrat', sans-serif;
-            font-size: 38px;
+            font-size: 34px;
             font-weight: 900;
-            max-width: 950px;
+            max-width: 980px;
             line-height: 1.25;
             letter-spacing: -0.02em;
+        }
+
+        .quiz-progress-banner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: rgba(15, 23, 42, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            padding: 10px 24px;
+            width: 100%;
+            max-width: 950px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+        }
+
+        .quiz-answered-pill {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--accent-cyan);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quiz-pct-badge {
+            background: rgba(56, 189, 248, 0.2);
+            color: var(--accent-cyan);
+            font-size: 12px;
+            font-weight: 900;
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-left: 6px;
+        }
+
+        .quiz-students-stream {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            max-width: 950px;
+            justify-content: center;
+            min-height: 28px;
+        }
+
+        .quiz-student-tag {
+            background: rgba(16, 185, 129, 0.2);
+            border: 1px solid rgba(16, 185, 129, 0.4);
+            color: #A7F3D0;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            animation: popTag 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        @keyframes popTag {
+            0% { opacity: 0; transform: scale(0.7); }
+            100% { opacity: 1; transform: scale(1); }
         }
 
         .quiz-cards-grid {
@@ -550,9 +623,9 @@
         }
 
         .quiz-option-card {
-            padding: 28px 24px;
+            padding: 24px 22px;
             border-radius: 18px;
-            font-size: 21px;
+            font-size: 19px;
             font-weight: 800;
             text-align: left;
             display: flex;
@@ -560,15 +633,30 @@
             gap: 16px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             border: 2px solid transparent;
-            transition: transform 0.2s;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        .quiz-option-card:hover { transform: scale(1.02); }
+        .quiz-option-card:hover { transform: scale(1.015); }
 
         .card-red { background: #DC2626; color: white; }
         .card-blue { background: #2563EB; color: white; }
         .card-green { background: #16A34A; color: white; }
         .card-yellow { background: #D97706; color: white; }
+
+        .quiz-option-card.card-revealed-correct {
+            border: 3.5px solid #10B981 !important;
+            box-shadow: 0 0 45px rgba(16, 185, 129, 0.85) !important;
+            transform: scale(1.04) !important;
+            z-index: 5;
+        }
+
+        .quiz-option-card.card-revealed-wrong {
+            opacity: 0.32 !important;
+            filter: grayscale(50%);
+            transform: scale(0.98);
+        }
 
         .opt-letter {
             width: 38px;
@@ -579,6 +667,38 @@
             align-items: center;
             justify-content: center;
             font-weight: 900;
+            flex-shrink: 0;
+        }
+
+        .opt-text-val {
+            flex: 1;
+            line-height: 1.3;
+        }
+
+        .opt-vote-count {
+            font-size: 13px;
+            font-weight: 900;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 5px 12px;
+            border-radius: 8px;
+            display: none;
+            white-space: nowrap;
+        }
+
+        .opt-votes-bar-bg {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 6px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.35);
+        }
+
+        .opt-votes-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: #FFFFFF;
+            transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
         /* 4. CHAMPIONS PODIUM */
@@ -1112,24 +1232,55 @@
 
         <!-- 3. SPEED QUIZ ARENA VIEW -->
         <div class="quiz-view" id="quizView">
-            <div class="quiz-title-badge">RAPID KNOWLEDGE CHECK (+CASH BONUS)</div>
+            <div style="display: flex; align-items: center; gap: 14px;">
+                <div class="quiz-title-badge">⚡ RAPID KNOWLEDGE CHECK</div>
+                <div class="quiz-reward-pill" id="quizRewardBadge">+ $30 CASH BONUS</div>
+            </div>
+
             <div class="quiz-headline" id="quizQuestionText">Question Goes Here?</div>
+
+            <!-- Live Quiz Progress & Student Lock-in Bar -->
+            <div class="quiz-progress-banner">
+                <div class="quiz-answered-pill">
+                    <span style="font-size: 18px;">🔒</span>
+                    <span>ANSWERS LOCKED:</span>
+                    <strong id="quizAnsweredCount" style="color: #FFFFFF; font-size: 18px;">0</strong>
+                    <span style="color: var(--text-sub);">/</span>
+                    <span id="quizTotalCount" style="color: var(--text-sub);">0</span>
+                    <span id="quizPercentPill" class="quiz-pct-badge">0%</span>
+                </div>
+                <div id="quizTimerText" style="font-size: 13px; font-weight: 700; color: var(--accent-cyan);">Waiting for students...</div>
+            </div>
+
+            <!-- Stream of student tags who answered -->
+            <div class="quiz-students-stream" id="quizStudentsStream">
+                <!-- dynamically filled: <span class="quiz-student-tag">✔ Jasur</span> -->
+            </div>
+
             <div class="quiz-cards-grid">
                 <div class="quiz-option-card card-red" id="opt0">
                     <div class="opt-letter">A</div>
-                    <span id="optText0">Option A</span>
+                    <span class="opt-text-val" id="optText0">Option A</span>
+                    <div class="opt-vote-count" id="optVote0">0 votes (0%)</div>
+                    <div class="opt-votes-bar-bg"><div class="opt-votes-bar-fill" id="optBar0"></div></div>
                 </div>
                 <div class="quiz-option-card card-blue" id="opt1">
                     <div class="opt-letter">B</div>
-                    <span id="optText1">Option B</span>
+                    <span class="opt-text-val" id="optText1">Option B</span>
+                    <div class="opt-vote-count" id="optVote1">0 votes (0%)</div>
+                    <div class="opt-votes-bar-bg"><div class="opt-votes-bar-fill" id="optBar1"></div></div>
                 </div>
                 <div class="quiz-option-card card-green" id="opt2">
                     <div class="opt-letter">C</div>
-                    <span id="optText2">Option C</span>
+                    <span class="opt-text-val" id="optText2">Option C</span>
+                    <div class="opt-vote-count" id="optVote2">0 votes (0%)</div>
+                    <div class="opt-votes-bar-bg"><div class="opt-votes-bar-fill" id="optBar2"></div></div>
                 </div>
                 <div class="quiz-option-card card-yellow" id="opt3">
                     <div class="opt-letter">D</div>
-                    <span id="optText3">Option D</span>
+                    <span class="opt-text-val" id="optText3">Option D</span>
+                    <div class="opt-vote-count" id="optVote3">0 votes (0%)</div>
+                    <div class="opt-votes-bar-bg"><div class="opt-votes-bar-fill" id="optBar3"></div></div>
                 </div>
             </div>
         </div>
@@ -1172,7 +1323,7 @@
         <div style="display: flex; gap: 14px;">
             <a href="/slides" target="_blank" class="ctrl-btn" style="text-decoration: none; color: var(--accent-cyan); border-color: rgba(56, 189, 248, 0.4); display: flex; align-items: center; gap: 6px;">📊 Slides Deck</a>
             <button class="ctrl-btn" onclick="prevRound()">◀ Previous Round</button>
-            <button class="ctrl-btn btn-launch" onclick="nextRound()">Next Round ▶</button>
+            <button class="ctrl-btn btn-launch" id="hostNextBtn" onclick="nextRound()">Next Round ▶</button>
             <button class="ctrl-btn" onclick="resetGame()" style="color: var(--accent-red); border-color: rgba(244, 63, 94, 0.3);">↺ Reset</button>
         </div>
     </div>
@@ -1375,6 +1526,12 @@
                 if (data.type === 'LIVE_TRADE_EVENT') {
                     handleLiveTrade(data.trade);
                 }
+                if (data.type === 'QUIZ_PROGRESS_UPDATE') {
+                    updateQuizProgress(data);
+                }
+                if (data.type === 'QUIZ_REVEAL_EVENT') {
+                    handleQuizReveal(data);
+                }
             };
 
             ws.onclose = () => setTimeout(connectWS, 1500);
@@ -1421,19 +1578,42 @@
             quizView.style.display = 'none';
             gameoverView.style.display = 'none';
 
+            const nextBtn = document.getElementById('hostNextBtn');
+
             if (state.phase === 'LOBBY') {
                 lobbyView.style.display = 'flex';
                 renderLobby(state.players);
+                if (nextBtn) {
+                    nextBtn.textContent = 'START GAME ▶';
+                    nextBtn.style.background = '';
+                }
             } else if (state.phase.startsWith('ROUND_5_QUIZ') || state.phase.startsWith('ROUND_6_QUIZ')) {
                 quizView.style.display = 'flex';
-                renderQuiz(state.quizQuestion);
+                renderQuiz(state.quizQuestion, state.quizProgress);
+                if (nextBtn) {
+                    if (state.quizQuestion && state.quizQuestion.revealed) {
+                        nextBtn.textContent = state.phase.startsWith('ROUND_6') ? 'View Champions 🏆' : 'Next Round ▶';
+                        nextBtn.style.background = '';
+                    } else {
+                        nextBtn.textContent = 'Reveal Answer 🎯';
+                        nextBtn.style.background = 'linear-gradient(135deg, #F59E0B, #10B981)';
+                    }
+                }
             } else if (state.phase === 'GAME_OVER') {
                 gameoverView.style.display = 'flex';
                 renderPodium(state.players);
                 sfxVictory();
+                if (nextBtn) {
+                    nextBtn.textContent = 'Game Completed 🏆';
+                    nextBtn.style.background = '';
+                }
             } else {
                 tradingView.style.display = 'flex';
                 renderTrading(state);
+                if (nextBtn) {
+                    nextBtn.textContent = 'Next Round ▶';
+                    nextBtn.style.background = '';
+                }
             }
         }
 
@@ -1499,13 +1679,130 @@
             });
         }
 
-        function renderQuiz(quiz) {
+        function renderQuiz(quiz, progress) {
             if (!quiz) return;
             document.getElementById('quizQuestionText').textContent = quiz.question;
             document.getElementById('optText0').textContent = quiz.options[0];
             document.getElementById('optText1').textContent = quiz.options[1];
             document.getElementById('optText2').textContent = quiz.options[2];
             document.getElementById('optText3').textContent = quiz.options[3];
+
+            const rewardEl = document.getElementById('quizRewardBadge');
+            if (rewardEl) {
+                rewardEl.textContent = `+ $${quiz.reward || 30} CASH BONUS`;
+            }
+
+            if (progress) {
+                updateQuizProgress(progress);
+            }
+
+            if (quiz.revealed && quiz.correct !== null && quiz.correct !== undefined) {
+                applyQuizRevealVisuals(quiz.correct, quiz.counts || [0,0,0,0], progress ? progress.answeredCount : 0);
+            } else {
+                resetQuizVisuals();
+            }
+        }
+
+        function resetQuizVisuals() {
+            for (let i = 0; i < 4; i++) {
+                const card = document.getElementById(`opt${i}`);
+                const vote = document.getElementById(`optVote${i}`);
+                const bar = document.getElementById(`optBar${i}`);
+                if (card) {
+                    card.classList.remove('card-revealed-correct', 'card-revealed-wrong');
+                }
+                if (vote) {
+                    vote.style.display = 'none';
+                    vote.textContent = '0 votes (0%)';
+                }
+                if (bar) {
+                    bar.style.width = '0%';
+                }
+            }
+        }
+
+        function updateQuizProgress(data) {
+            const answered = data.answeredCount || 0;
+            const total = data.totalPlayers || 0;
+            const pct = total > 0 ? Math.round((answered / total) * 100) : 0;
+
+            const answeredEl = document.getElementById('quizAnsweredCount');
+            const totalEl = document.getElementById('quizTotalCount');
+            const pctEl = document.getElementById('quizPercentPill');
+            const timerEl = document.getElementById('quizTimerText');
+            const streamEl = document.getElementById('quizStudentsStream');
+
+            if (answeredEl) answeredEl.textContent = answered;
+            if (totalEl) totalEl.textContent = total;
+            if (pctEl) pctEl.textContent = `${pct}%`;
+
+            if (timerEl) {
+                if (total > 0 && answered >= total) {
+                    timerEl.textContent = '🎉 All students have locked in their answers! Ready to reveal!';
+                    timerEl.style.color = 'var(--accent-green)';
+                } else {
+                    timerEl.textContent = `Students locking in answers on their phones (${answered}/${total})...`;
+                    timerEl.style.color = 'var(--accent-cyan)';
+                }
+            }
+
+            if (streamEl) {
+                streamEl.innerHTML = '';
+                (data.answeredPlayerNames || []).forEach(name => {
+                    const tag = document.createElement('span');
+                    tag.className = 'quiz-student-tag';
+                    tag.innerHTML = `<span>✔</span> ${escapeHtml(name)}`;
+                    streamEl.appendChild(tag);
+                });
+            }
+        }
+
+        function applyQuizRevealVisuals(correctIndex, counts, totalAnswered) {
+            const sumVotes = counts ? counts.reduce((a, b) => a + b, 0) : totalAnswered;
+            for (let i = 0; i < 4; i++) {
+                const card = document.getElementById(`opt${i}`);
+                const vote = document.getElementById(`optVote${i}`);
+                const bar = document.getElementById(`optBar${i}`);
+                const count = (counts && counts[i]) ? counts[i] : 0;
+                const pct = sumVotes > 0 ? Math.round((count / sumVotes) * 100) : 0;
+
+                if (card) {
+                    if (i === correctIndex) {
+                        card.classList.add('card-revealed-correct');
+                        card.classList.remove('card-revealed-wrong');
+                    } else {
+                        card.classList.add('card-revealed-wrong');
+                        card.classList.remove('card-revealed-correct');
+                    }
+                }
+                if (vote) {
+                    vote.textContent = `${count} vote${count !== 1 ? 's' : ''} (${pct}%)`;
+                    vote.style.display = 'block';
+                }
+                if (bar) {
+                    bar.style.width = `${pct}%`;
+                }
+            }
+        }
+
+        function handleQuizReveal(data) {
+            sfxVictory();
+            if (window.confetti) {
+                confetti({ particleCount: 110, spread: 80, origin: { y: 0.6 } });
+            }
+            applyQuizRevealVisuals(data.correctIndex, data.counts, data.totalAnswered);
+
+            const timerEl = document.getElementById('quizTimerText');
+            if (timerEl) {
+                timerEl.textContent = '🎯 Answer Revealed! Reviewing results with class...';
+                timerEl.style.color = 'var(--accent-gold)';
+            }
+
+            const nextBtn = document.getElementById('hostNextBtn');
+            if (nextBtn) {
+                nextBtn.textContent = 'Next Round ▶';
+                nextBtn.style.background = '';
+            }
         }
 
         function renderPodium(players) {

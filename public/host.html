@@ -317,60 +317,112 @@
 
         /* Breaking News Ticker */
         .news-hero-banner {
-            background: linear-gradient(135deg, rgba(30, 41, 67, 0.95), rgba(15, 23, 42, 0.95));
-            border-left: 8px solid var(--accent-cyan);
-            border-radius: 18px;
-            padding: 22px 32px;
+            background: linear-gradient(135deg, rgba(30, 41, 67, 0.98), rgba(15, 23, 42, 0.98));
+            border-left: 10px solid var(--accent-cyan);
+            border-radius: 20px;
+            padding: 26px 36px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            border-right: 1px solid rgba(255, 255, 255, 0.08);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 25px rgba(56, 189, 248, 0.15);
+            border-top: 1px solid rgba(255, 255, 255, 0.12);
+            border-right: 1px solid rgba(255, 255, 255, 0.12);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            position: relative;
+            overflow: hidden;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .news-hero-banner::after {
+            content: '';
+            position: absolute;
+            top: 0; right: 0; bottom: 0; width: 35%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.02));
+            pointer-events: none;
         }
 
         .news-hero-banner.rally-mode {
             border-left-color: var(--accent-green);
-            background: linear-gradient(135deg, rgba(16, 45, 35, 0.95), rgba(10, 25, 20, 0.95));
+            background: linear-gradient(135deg, rgba(16, 55, 40, 0.98), rgba(10, 30, 24, 0.98));
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 35px rgba(16, 185, 129, 0.25);
         }
 
         .news-hero-banner.panic-mode {
             border-left-color: var(--accent-red);
-            background: linear-gradient(135deg, rgba(60, 20, 30, 0.95), rgba(30, 10, 15, 0.95));
+            background: linear-gradient(135deg, rgba(70, 20, 35, 0.98), rgba(35, 10, 18, 0.98));
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 35px rgba(244, 63, 94, 0.25);
         }
 
         .news-hero-banner.dividend-mode {
             border-left-color: var(--accent-gold);
-            background: linear-gradient(135deg, rgba(60, 45, 15, 0.95), rgba(30, 20, 5, 0.95));
+            background: linear-gradient(135deg, rgba(70, 50, 15, 0.98), rgba(35, 22, 6, 0.98));
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65), 0 0 35px rgba(245, 158, 11, 0.25);
         }
 
         .news-content {
             display: flex;
             flex-direction: column;
-            gap: 6px;
-            max-width: 75%;
+            gap: 12px;
+            max-width: 78%;
+            z-index: 2;
         }
 
         .news-badge {
-            font-size: 11px;
+            font-size: 13px;
             font-weight: 900;
-            color: var(--accent-gold);
+            color: var(--accent-cyan);
             letter-spacing: 0.12em;
             text-transform: uppercase;
+            background: rgba(56, 189, 248, 0.18);
+            border: 1.5px solid rgba(56, 189, 248, 0.45);
+            padding: 6px 16px;
+            border-radius: 9999px;
+            width: fit-content;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 15px rgba(56, 189, 248, 0.2);
+            transition: all 0.3s;
+        }
+
+        .news-hero-banner.rally-mode .news-badge {
+            color: var(--accent-green);
+            background: rgba(16, 185, 129, 0.18);
+            border-color: rgba(16, 185, 129, 0.45);
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
+        }
+
+        .news-hero-banner.panic-mode .news-badge {
+            color: var(--accent-red);
+            background: rgba(244, 63, 94, 0.18);
+            border-color: rgba(244, 63, 94, 0.45);
+            box-shadow: 0 4px 15px rgba(244, 63, 94, 0.2);
+        }
+
+        .news-hero-banner.dividend-mode .news-badge {
+            color: var(--accent-gold);
+            background: rgba(245, 158, 11, 0.18);
+            border-color: rgba(245, 158, 11, 0.45);
+            box-shadow: 0 4px 15px rgba(245, 158, 11, 0.2);
         }
 
         .news-title {
-            font-size: 28px;
+            font-size: clamp(28px, 2.7vw, 44px);
             font-weight: 900;
             font-family: 'Montserrat', sans-serif;
             letter-spacing: -0.02em;
+            line-height: 1.22;
+            color: #FFFFFF;
+            text-shadow: 0 3px 18px rgba(0, 0, 0, 0.7);
         }
 
         .news-desc {
-            font-size: 15px;
-            color: var(--text-sub);
-            line-height: 1.4;
+            font-size: clamp(17px, 1.35vw, 22px);
+            color: #F8FAFC;
+            line-height: 1.6;
+            font-weight: 500;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.8);
+            letter-spacing: -0.005em;
         }
 
         .round-meter-box {
@@ -378,17 +430,20 @@
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-            gap: 6px;
+            gap: 8px;
+            z-index: 2;
         }
 
         .round-counter-pill {
-            font-size: 13px;
-            font-weight: 800;
+            font-size: 14px;
+            font-weight: 900;
             color: var(--accent-cyan);
-            background: rgba(56, 189, 248, 0.15);
-            padding: 6px 14px;
-            border-radius: 8px;
-            letter-spacing: 0.05em;
+            background: rgba(56, 189, 248, 0.18);
+            border: 1.5px solid rgba(56, 189, 248, 0.4);
+            padding: 8px 18px;
+            border-radius: 10px;
+            letter-spacing: 0.06em;
+            white-space: nowrap;
         }
 
         /* Two Visual Arenas (Pizza + Live Leaderboard) */
@@ -1096,6 +1151,457 @@
             color: #FFFFFF;
             text-shadow: 0 0 20px rgba(16, 185, 129, 0.9);
         }
+
+        /* ============================================================
+           RESPONSIVE & MOBILE ADAPTATION (TABLET & PHONES)
+           ============================================================ */
+        @media (max-width: 1024px) {
+            body {
+                overflow-y: auto !important;
+                height: auto !important;
+                min-height: 100vh;
+            }
+
+            .arena-header {
+                height: auto;
+                padding: 14px 20px;
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
+            .main-arena {
+                padding: 18px 20px;
+                height: auto;
+                overflow: visible;
+            }
+
+            .stage-columns {
+                grid-template-columns: 1fr;
+                height: auto;
+                overflow: visible;
+                gap: 20px;
+            }
+
+            .pizza-visual-card {
+                height: auto;
+            }
+
+            .board-feed-card {
+                height: auto;
+                min-height: 380px;
+            }
+
+            .lobby-view {
+                flex-direction: column;
+                height: auto;
+                gap: 20px;
+            }
+
+            .qr-hero-card {
+                width: 100%;
+                max-width: 500px;
+                margin: 0 auto;
+            }
+
+            .arena-dock {
+                height: auto;
+                padding: 14px 20px;
+                flex-wrap: wrap;
+                gap: 12px;
+                position: sticky;
+                bottom: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                height: auto !important;
+                min-height: 100vh;
+            }
+
+            .arena-header {
+                padding: 12px 14px;
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+                height: auto;
+            }
+
+            .brand-box {
+                justify-content: space-between;
+                width: 100%;
+            }
+
+            .brand-text {
+                font-size: 16px;
+            }
+
+            .stock-hero-pill {
+                width: 100%;
+                justify-content: space-between;
+                padding: 8px 14px;
+                margin: 0;
+            }
+
+            .stock-ticker-name {
+                font-size: 12px;
+            }
+
+            .stock-price-huge {
+                font-size: 24px;
+            }
+
+            .header-badges-row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                width: 100%;
+                gap: 8px;
+            }
+
+            .pin-header-badge {
+                padding: 5px 10px;
+                font-size: 11px;
+            }
+
+            .pin-header-badge span:last-child {
+                font-size: 15px;
+            }
+
+            .player-counter-badge {
+                font-size: 11px;
+                padding: 5px 10px;
+            }
+
+            .main-arena {
+                padding: 12px 10px;
+                overflow: visible;
+                height: auto;
+            }
+
+            /* News Banner on Mobile */
+            .news-hero-banner {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 18px 16px;
+                gap: 14px;
+                border-left-width: 6px;
+                border-radius: 16px;
+            }
+
+            .news-content {
+                max-width: 100%;
+                gap: 8px;
+            }
+
+            .news-badge {
+                font-size: 12px;
+                padding: 4px 12px;
+            }
+
+            .news-title {
+                font-size: 22px !important;
+                line-height: 1.25 !important;
+            }
+
+            .news-desc {
+                font-size: 15.5px !important;
+                line-height: 1.5 !important;
+            }
+
+            .round-meter-box {
+                width: 100%;
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                border-top: 1px solid rgba(255, 255, 255, 0.08);
+                padding-top: 10px;
+            }
+
+            .round-counter-pill {
+                font-size: 12px;
+                padding: 5px 12px;
+            }
+
+            /* Stage Columns on Mobile */
+            .stage-columns {
+                display: flex;
+                flex-direction: column;
+                gap: 14px;
+                overflow: visible;
+                height: auto;
+            }
+
+            .pizza-visual-card {
+                padding: 16px 12px;
+                border-radius: 16px;
+            }
+
+            .pizza-wheel-container {
+                width: 190px;
+                height: 190px;
+                margin: 4px 0;
+            }
+
+            .pizza-center-badge {
+                width: 65px;
+                height: 65px;
+            }
+
+            .pizza-center-badge span:first-child {
+                font-size: 9px;
+            }
+
+            .pizza-center-badge span:last-child {
+                font-size: 11px;
+            }
+
+            .pizza-metrics-grid {
+                grid-template-columns: 1fr 1fr;
+                gap: 8px;
+                margin-top: 8px;
+                width: 100%;
+            }
+
+            .pizza-metric-card {
+                padding: 8px 10px;
+            }
+
+            .metric-title {
+                font-size: 9.5px;
+            }
+
+            .metric-val {
+                font-size: 14.5px;
+            }
+
+            .metric-sub {
+                font-size: 9.5px;
+            }
+
+            /* Live Trade Stream */
+            .live-stream-box {
+                margin-top: 10px;
+                padding: 8px 10px;
+                max-height: 110px;
+            }
+
+            /* Leaderboard Table Card Mobile */
+            .board-feed-card {
+                padding: 16px 12px;
+                border-radius: 16px;
+                overflow-x: auto;
+            }
+
+            .leaderboard-table {
+                min-width: 520px;
+                font-size: 13px;
+            }
+
+            .leaderboard-table th, .leaderboard-table td {
+                padding: 10px 8px;
+            }
+
+            /* Lobby View Mobile */
+            .lobby-view {
+                flex-direction: column;
+                gap: 14px;
+                height: auto;
+            }
+
+            .qr-hero-card {
+                width: 100%;
+                padding: 20px 14px;
+                border-radius: 18px;
+                gap: 12px;
+            }
+
+            .qr-img-box {
+                width: 180px;
+                height: 180px;
+                padding: 8px;
+            }
+
+            .game-pin-card {
+                width: 100%;
+                padding: 8px 14px;
+            }
+
+            .game-pin-number {
+                font-size: 28px;
+            }
+
+            .url-box {
+                font-size: 14px;
+                padding: 8px 12px;
+                word-break: break-all;
+            }
+
+            .lobby-feed-card {
+                padding: 16px 12px;
+                border-radius: 18px;
+                min-height: 250px;
+            }
+
+            .lobby-header-row {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+                margin-bottom: 14px;
+            }
+
+            .lobby-header-row h2 {
+                font-size: 22px !important;
+            }
+
+            .lobby-header-row .btn-launch {
+                width: 100%;
+                text-align: center;
+                justify-content: center;
+            }
+
+            .student-grid {
+                grid-template-columns: repeat(auto-fill, minmax(95px, 1fr));
+                gap: 8px;
+                max-height: 300px;
+            }
+
+            .student-chip {
+                padding: 10px 8px;
+            }
+
+            .student-avatar {
+                width: 36px;
+                height: 36px;
+                font-size: 15px;
+            }
+
+            .student-name {
+                font-size: 12px;
+                max-width: 80px;
+            }
+
+            /* Quiz View Mobile */
+            .quiz-view {
+                gap: 16px;
+                padding: 8px 0;
+                height: auto;
+            }
+
+            .quiz-title-badge, .quiz-reward-pill {
+                font-size: 11px;
+                padding: 5px 12px;
+            }
+
+            .quiz-headline {
+                font-size: 22px !important;
+                line-height: 1.3 !important;
+                max-width: 100%;
+            }
+
+            .quiz-progress-banner {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 10px 14px;
+                gap: 8px;
+            }
+
+            .quiz-cards-grid {
+                grid-template-columns: 1fr;
+                gap: 10px;
+            }
+
+            .quiz-option-card {
+                padding: 16px 14px;
+                font-size: 16px;
+                gap: 12px;
+            }
+
+            .opt-letter {
+                width: 32px;
+                height: 32px;
+                font-size: 14px;
+            }
+
+            /* Podium View Mobile */
+            .gameover-view {
+                padding: 16px 8px;
+                gap: 16px;
+                height: auto;
+            }
+
+            .gameover-view h1 {
+                font-size: 28px !important;
+            }
+
+            .podium-stage {
+                height: 280px;
+                gap: 10px;
+                max-width: 100%;
+            }
+
+            .pillar-gold { height: 240px; }
+            .pillar-silver { height: 180px; }
+            .pillar-bronze { height: 130px; }
+
+            .winner-name-text {
+                font-size: 15px;
+            }
+
+            .winner-score-pill {
+                font-size: 12px;
+                padding: 2px 8px;
+            }
+
+            .rank-number-big {
+                font-size: 36px;
+            }
+
+            /* Bottom Command Dock Mobile */
+            .arena-dock {
+                height: auto;
+                padding: 10px 12px;
+                flex-direction: column;
+                gap: 10px;
+                position: sticky;
+                bottom: 0;
+                background: rgba(10, 15, 29, 0.98);
+                border-top: 1.5px solid rgba(56, 189, 248, 0.3);
+            }
+
+            #currentRoundTitle {
+                text-align: center;
+                width: 100%;
+                font-size: 12px;
+            }
+
+            .dock-buttons-row {
+                display: flex;
+                width: 100%;
+                gap: 6px;
+                justify-content: space-between;
+                flex-wrap: wrap;
+            }
+
+            .dock-buttons-row .ctrl-btn {
+                flex: 1;
+                padding: 10px 8px;
+                font-size: 12px;
+                text-align: center;
+                justify-content: center;
+                white-space: nowrap;
+                min-width: 80px;
+            }
+
+            .dock-buttons-row .btn-launch {
+                flex: 1.5;
+                font-size: 13px;
+                padding: 10px 12px;
+                min-width: 130px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -1112,7 +1618,7 @@
             <span class="stock-price-huge" id="stockPriceDisplay">$10.00</span>
         </div>
 
-        <div style="display: flex; align-items: center; gap: 14px;">
+        <div class="header-badges-row" style="display: flex; align-items: center; gap: 14px;">
             <div class="pin-header-badge">
                 <span>GAME PIN:</span>
                 <span id="headerPinDisplay">----</span>
@@ -1362,7 +1868,7 @@
         <div style="font-size: 14px; color: var(--text-sub); font-weight: 700;" id="currentRoundTitle">
             Phase: Waiting in Lobby
         </div>
-        <div style="display: flex; gap: 14px;">
+        <div class="dock-buttons-row" style="display: flex; gap: 14px;">
             <a href="/slides" target="_blank" class="ctrl-btn" style="text-decoration: none; color: var(--accent-cyan); border-color: rgba(56, 189, 248, 0.4); display: flex; align-items: center; gap: 6px;">📊 Slides Deck</a>
             <button class="ctrl-btn" onclick="prevRound()">◀ Previous Round</button>
             <button class="ctrl-btn btn-launch" id="hostNextBtn" onclick="nextRound()">Next Round ▶</button>
@@ -1703,10 +2209,20 @@
 
         function renderTrading(state) {
             const banner = document.getElementById('newsBanner');
+            const newsTag = document.getElementById('newsTag');
             banner.className = 'news-hero-banner';
-            if (state.dividendAmount > 0) banner.classList.add('dividend-mode');
-            else if (state.phase.includes('DIP') || state.phase.includes('PANIC') || state.phase.includes('WAR')) banner.classList.add('panic-mode');
-            else if (state.phase.includes('VIRAL') || state.phase.includes('GLOBAL') || state.phase.includes('REBOUND') || state.phase.includes('TECH') || state.phase.includes('EXPANSION')) banner.classList.add('rally-mode');
+            if (state.dividendAmount > 0) {
+                banner.classList.add('dividend-mode');
+                if (newsTag) newsTag.textContent = '💰 CASH DIVIDEND PAYOUT';
+            } else if (state.phase && (state.phase.includes('DIP') || state.phase.includes('PANIC') || state.phase.includes('WAR'))) {
+                banner.classList.add('panic-mode');
+                if (newsTag) newsTag.textContent = '⚠️ MARKET ALERT / DIP';
+            } else if (state.phase && (state.phase.includes('VIRAL') || state.phase.includes('GLOBAL') || state.phase.includes('REBOUND') || state.phase.includes('TECH') || state.phase.includes('EXPANSION'))) {
+                banner.classList.add('rally-mode');
+                if (newsTag) newsTag.textContent = '🚀 GROWTH RALLY';
+            } else {
+                if (newsTag) newsTag.textContent = '📢 MARKET ALERT';
+            }
 
             document.getElementById('newsHeadline').textContent = state.newsHeadline;
             document.getElementById('newsDetails').textContent = state.newsDetails;

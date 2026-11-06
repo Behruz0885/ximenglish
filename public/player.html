@@ -772,7 +772,7 @@
                         }
                     }
 
-                    isQuizRound = data.state.phase.startsWith('ROUND_5_QUIZ') || data.state.phase.startsWith('ROUND_6_QUIZ');
+                    isQuizRound = Boolean(data.state.phase.includes('QUIZ') || (data.state.quizQuestion && data.state.quizActive));
 
                     const tradingPanel = document.getElementById('tradingActionsPanel');
                     const quizPanel = document.getElementById('quizActionsPanel');

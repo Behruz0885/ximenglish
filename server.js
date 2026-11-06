@@ -56,10 +56,16 @@ function generateGamePin() {
 // Game State
 const state = {
     gamePin: generateGamePin(),
-    phase: 'LOBBY', // LOBBY, ROUND_1_IPO, ROUND_2_RALLY, ROUND_3_DIP, ROUND_4_DIVIDEND, ROUND_5_QUIZ_1, ROUND_6_QUIZ_2, GAME_OVER
+    phase: 'LOBBY', // LOBBY, ROUND_1_IPO, ...
     stockName: 'Nova Pizza Inc.',
     stockPrice: 10,
+    totalShares: 1000000,
+    storesCount: '12 Locations',
+    annualRevenue: '$8.5 Million',
+    valuationFormatted: '$10,000,000',
     roundNumber: 0,
+    quizNumber: null,
+    isQuiz: false,
     roundTitle: 'Waiting for Players...',
     newsHeadline: '',
     newsDetails: '',
@@ -208,6 +214,7 @@ function broadcastState() {
             question: state.quizQuestion.question,
             options: state.quizQuestion.options,
             reward: state.quizQuestion.reward,
+            quizNumber: state.quizNumber,
             revealed: state.quizRevealed,
             correct: state.quizRevealed ? state.quizQuestion.correct : null,
             counts: state.quizRevealed ? getQuizCounts() : null
@@ -221,7 +228,13 @@ function broadcastState() {
             phase: state.phase,
             stockName: state.stockName,
             stockPrice: state.stockPrice,
+            totalShares: state.totalShares || 1000000,
+            storesCount: state.storesCount || '12 Locations',
+            annualRevenue: state.annualRevenue || '$8.5M',
+            valuationFormatted: state.valuationFormatted || `$${(state.stockPrice * 1000000).toLocaleString()}`,
             roundNumber: state.roundNumber,
+            quizNumber: state.quizNumber,
+            isQuiz: state.isQuiz,
             roundTitle: state.roundTitle,
             newsHeadline: state.newsHeadline,
             newsDetails: state.newsDetails,
@@ -239,91 +252,285 @@ function broadcastState() {
     });
 }
 
-// Predefined Game Rounds
+// Predefined Game Rounds: 10 Pizza Business Processes + 5 Simple Speed Quizzes + Grand Finale
 const ROUNDS = [
+    // --- 1. IPO ---
     {
         phase: 'ROUND_1_IPO',
         number: 1,
+        isQuiz: false,
         title: 'ROUND 1: THE PIZZA IPO ($10 / Share)',
         price: 10,
-        headline: 'Nova Pizza Inc. Launches on the Stock Market!',
-        details: 'The company needs money to expand. Each share costs $10. You have $100 cash. How many slices do you want to buy?',
+        stores: '12 Locations',
+        revenue: '$8.5 Million',
+        valuation: '$10,000,000',
+        headline: 'Nova Pizza Inc. Launches on the Stock Market at $10 / Share!',
+        details: 'Nova Pizza operates 12 busy California pizzerias. To open new restaurants and buy ovens, the founders issue 1,000,000 shares at $10 each ($10M company valuation). You have $100 starting cash. Buy your first slices!',
         dividend: 0
     },
+    // --- 2. VIRAL MARKETING ---
     {
-        phase: 'ROUND_2_RALLY',
+        phase: 'ROUND_2_VIRAL',
         number: 2,
-        title: 'ROUND 2: THE VIRAL SENSATION (Rally to $25)',
-        price: 25,
-        headline: 'Viral Hit: Nova Pizza explodes on social media!',
-        details: 'Global sales jumped 300%. The stock price surges from $10 to $25! You can SELL NOW to secure your capital gain, or HOLD for future dividends!',
+        isQuiz: false,
+        title: 'ROUND 2: SECRET SAUCE GOES VIRAL ($16 / Share)',
+        price: 16,
+        stores: '12 Locations',
+        revenue: '$14.0 Million',
+        valuation: '$16,000,000',
+        headline: 'Viral Sensation: "Hot-Honey Truffle Pizza" hits 40 Million views!',
+        details: 'Customers line up for 2 hours outside every restaurant. Daily pizza sales surge 65%! High demand pushes the stock price from $10 up to $16 ($16M company valuation). Will you hold or take quick profits?',
         dividend: 0
     },
+    // --- SPEED QUIZ 1 ---
     {
-        phase: 'ROUND_3_DIP',
-        number: 3,
-        title: 'ROUND 3: THE PANIC DIP (Price drops to $8)',
-        price: 8,
-        headline: 'Breaking: Cheese shortage rumors cause temporary panic!',
-        details: 'Social media claims the company is in trouble. Stock falls to $8. Will you PANIC SELL at a loss, or BUY THE DIP while it is on sale?',
-        dividend: 0
-    },
-    {
-        phase: 'ROUND_4_DIVIDEND',
-        number: 4,
-        title: 'ROUND 4: RECORD PROFITS & CASH DIVIDEND',
-        price: 35,
-        headline: 'Record Year: Payout of $5 Cash Dividend Per Share!',
-        details: 'The company crushed earnings! Every shareholder receives $5 CASH per share directly deposited. Stock price rockets to $35!',
-        dividend: 5
-    },
-    {
-        phase: 'ROUND_5_QUIZ_1',
-        number: 5,
-        title: 'ROUND 5: KNOWLEDGE CHECK (Bonus +$30)',
-        price: 35,
-        headline: 'Speed Quiz: What is an S&P 500 Index Fund (ETF)?',
-        details: 'Choose the correct answer on your phone. First to answer gets extra cash bonus!',
+        phase: 'QUIZ_1_SHARE',
+        quizNumber: 1,
+        isQuiz: true,
+        title: '⚡ SPEED QUIZ 1: WHAT IS A STOCK SHARE?',
+        price: 16,
+        stores: '12 Locations',
+        revenue: '$14.0 Million',
+        valuation: '$16,000,000',
+        headline: 'Knowledge Bonus: What does owning a share of stock actually mean?',
+        details: 'Tap the correct answer on your mobile phone to earn a +$30 cash bonus!',
         dividend: 0,
         quiz: {
-            question: 'What is an S&P 500 ETF (Index Fund)?',
+            question: 'What is a share of stock?',
             options: [
-                'Buying 1 hyped cryptocurrency',
-                'Owning the top 500 biggest companies at once',
-                'A bank loan with high interest',
-                'A lottery ticket'
+                'A bank loan you have to repay with interest',
+                'A legal slice of ownership in a real company',
+                'A lottery ticket that depends on luck',
+                'A discount coupon for free pizza'
             ],
             correct: 1,
             reward: 30
         }
     },
+    // --- 3. STORE EXPANSION ---
     {
-        phase: 'ROUND_6_QUIZ_2',
-        number: 6,
-        title: 'ROUND 6: FINAL KNOWLEDGE CHECK (Bonus +$40)',
-        price: 35,
-        headline: 'Speed Quiz: Who does the CEO of Apple ultimately work for?',
-        details: 'Choose the correct answer on your phone to climb the final leaderboard!',
+        phase: 'ROUND_3_EXPANSION',
+        number: 3,
+        isQuiz: false,
+        title: 'ROUND 3: RAPID DRIVE-THRU EXPANSION ($24 / Share)',
+        price: 24,
+        stores: '30 Locations',
+        revenue: '$25.0 Million',
+        valuation: '$24,000,000',
+        headline: 'Physical Expansion: Nova Pizza opens 18 new drive-thrus!',
+        details: 'Using the cash raised from the IPO, Nova Pizza expands into Texas and Florida. Total locations reach 30 pizzerias. Customer volume pushes the stock to $24 ($24M valuation)!',
+        dividend: 0
+    },
+    // --- 4. TECHNOLOGY & AUTOMATION ---
+    {
+        phase: 'ROUND_4_TECH',
+        number: 4,
+        isQuiz: false,
+        title: 'ROUND 4: DELIVERY APP & ROBOTIC KITCHENS ($32 / Share)',
+        price: 32,
+        stores: '30 Stores + App',
+        revenue: '$38.0 Million',
+        valuation: '$32,000,000',
+        headline: 'Tech Innovation: Nova Pizza launches mobile app & automated ovens!',
+        details: '500,000 customers download the app for 1-click delivery. New automated dough-presses cut labor costs by 30%, skyrocketing profit margins. Stock leaps to $32 ($32M valuation)!',
+        dividend: 0
+    },
+    // --- SPEED QUIZ 2 ---
+    {
+        phase: 'QUIZ_2_GROWTH',
+        quizNumber: 2,
+        isQuiz: true,
+        title: '⚡ SPEED QUIZ 2: WHY DO STOCKS GROW?',
+        price: 32,
+        stores: '30 Stores + App',
+        revenue: '$38.0 Million',
+        valuation: '$32,000,000',
+        headline: 'Knowledge Bonus: What drives stock prices higher over time?',
+        details: 'Answer on your phone for a +$30 cash bonus!',
         dividend: 0,
         quiz: {
-            question: 'If you own 1 share of Apple, who does CEO Tim Cook work for?',
+            question: 'Why does a company\'s stock price go UP over time?',
             options: [
-                'Only for himself',
-                'The bank manager',
-                'For YOU (the shareholder/owner)',
-                'Nobody'
+                'When the company sells more and earns higher profits',
+                'Pure luck and random coin flips',
+                'When the company closes its stores and fires workers',
+                'The government forces the price to increase'
             ],
-            correct: 2,
+            correct: 0,
+            reward: 30
+        }
+    },
+    // --- 5. PANIC DIP ---
+    {
+        phase: 'ROUND_5_DIP',
+        number: 5,
+        isQuiz: false,
+        title: 'ROUND 5: THE CHEESE INFLATION PANIC ($15 / Share)',
+        price: 15,
+        stores: '30 Locations',
+        revenue: '$34.0 Million',
+        valuation: '$15,000,000',
+        headline: 'Market Correction: Severe dairy shortage spikes cheese costs by 80%!',
+        details: 'Financial news predicts profit collapse. Panicked short-term traders dump their shares, causing the price to crash from $32 down to $15! Is Nova Pizza ruined, or is quality on sale? BUY THE DIP or PANIC SELL?',
+        dividend: 0
+    },
+    // --- SPEED QUIZ 3 ---
+    {
+        phase: 'QUIZ_3_DIP',
+        quizNumber: 3,
+        isQuiz: true,
+        title: '⚡ SPEED QUIZ 3: BUYING THE DIP',
+        price: 15,
+        stores: '30 Locations',
+        revenue: '$34.0 Million',
+        valuation: '$15,000,000',
+        headline: 'Knowledge Bonus: What is the mindset of a smart investor during a dip?',
+        details: 'Answer on your phone for a +$30 cash bonus!',
+        dividend: 0,
+        quiz: {
+            question: 'What does "Buying the Dip" mean in the stock market?',
+            options: [
+                'Selling all your shares in fear when the market drops',
+                'Buying quality shares at a discount when price temporarily falls',
+                'Borrowing cash to gamble on random trends',
+                'Deleting your investment app'
+            ],
+            correct: 1,
+            reward: 30
+        }
+    },
+    // --- 6. SUPPLY CHAIN TURNAROUND ---
+    {
+        phase: 'ROUND_6_REBOUND',
+        number: 6,
+        isQuiz: false,
+        title: 'ROUND 6: THE SUPPLY CHAIN TURNAROUND ($26 / Share)',
+        price: 26,
+        stores: '45 Locations',
+        revenue: '$45.0 Million',
+        valuation: '$26,000,000',
+        headline: 'Turnaround: Nova Pizza signs direct 5-year fixed contracts with dairy farmers!',
+        details: 'Smart management bypasses wholesalers, cutting ingredient costs back to normal. Profits surge back and 15 new stores open. The stock rebounds sharply from $15 back to $26 ($26M valuation)!',
+        dividend: 0
+    },
+    // --- 7. CASH DIVIDEND ---
+    {
+        phase: 'ROUND_7_DIVIDEND',
+        number: 7,
+        isQuiz: false,
+        title: 'ROUND 7: FRANCHISE BOOM & $3 CASH DIVIDEND ($36 / Share)',
+        price: 36,
+        stores: '75 Locations',
+        revenue: '$60.0 Million',
+        valuation: '$36,000,000',
+        headline: 'Cash Payout: Nova Pizza pays $3.00 Cash Dividend Per Share!',
+        details: 'Nova Pizza sells 30 profitable franchise licenses. With massive cash in the bank, the Board deposits $3.00 CASH directly into your balance for every share you hold! Stock price rallies to $36 ($36M valuation)!',
+        dividend: 3
+    },
+    // --- SPEED QUIZ 4 ---
+    {
+        phase: 'QUIZ_4_DIVIDEND',
+        quizNumber: 4,
+        isQuiz: true,
+        title: '⚡ SPEED QUIZ 4: CASH DIVIDENDS',
+        price: 36,
+        stores: '75 Locations',
+        revenue: '$60.0 Million',
+        valuation: '$36,000,000',
+        headline: 'Knowledge Bonus: How do companies share profits with investors?',
+        details: 'Answer on your phone for a +$40 cash bonus!',
+        dividend: 0,
+        quiz: {
+            question: 'What is a cash Dividend in the stock market?',
+            options: [
+                'A monthly maintenance fee you pay to the stock broker',
+                'A share of company profits paid directly to shareholders in cash',
+                'A coupon code for free pizza delivery',
+                'A penalty for holding shares too long'
+            ],
+            correct: 1,
             reward: 40
         }
     },
+    // --- 8. COMPETITION & PRICE WAR ---
+    {
+        phase: 'ROUND_8_COMPETITION',
+        number: 8,
+        isQuiz: false,
+        title: 'ROUND 8: FAST-FOOD PRICE WAR ($28 / Share)',
+        price: 28,
+        stores: '80 Locations',
+        revenue: '$58.0 Million',
+        valuation: '$28,000,000',
+        headline: 'Price War: A giant fast-food rival launches a $5 imitation pizza!',
+        details: 'A corporate giant spends millions advertising a cheap copy of Nova Pizza. Short-term quarterly growth slows down and the stock dips to $28. But loyal customers return for Nova Pizza\'s authentic quality.',
+        dividend: 0
+    },
+    // --- 9. GLOBAL EXPANSION ---
+    {
+        phase: 'ROUND_9_GLOBAL',
+        number: 9,
+        isQuiz: false,
+        title: 'ROUND 9: GLOBAL EXPANSION (LONDON & TOKYO) ($48 / Share)',
+        price: 48,
+        stores: '130 Locations',
+        revenue: '$85.0 Million',
+        valuation: '$48,000,000',
+        headline: 'International Hit: Flagships open in London, Tokyo and Dubai!',
+        details: 'Global demand is off the charts! 50 international franchise stores open to rave reviews. International revenue pushes company sales to $85 Million. The stock rockets to $48 ($48M valuation)!',
+        dividend: 0
+    },
+    // --- SPEED QUIZ 5 ---
+    {
+        phase: 'QUIZ_5_INDEX',
+        quizNumber: 5,
+        isQuiz: true,
+        title: '⚡ SPEED QUIZ 5: REDUCING RISK (S&P 500)',
+        price: 48,
+        stores: '130 Locations',
+        revenue: '$85.0 Million',
+        valuation: '$48,000,000',
+        headline: 'Final Knowledge Bonus: How do professional investors protect wealth?',
+        details: 'Final speed quiz challenge for a +$40 cash bonus!',
+        dividend: 0,
+        quiz: {
+            question: 'What is the smartest way to reduce risk when investing?',
+            options: [
+                'Putting all your life savings into 1 single meme stock',
+                'Diversifying by owning an index fund (like the S&P 500)',
+                'Trading every 5 minutes based on social media rumors',
+                'Keeping all your cash hidden under a mattress'
+            ],
+            correct: 1,
+            reward: 40
+        }
+    },
+    // --- 10. RECORD YEAR & MEGA DIVIDEND ---
+    {
+        phase: 'ROUND_10_MEGA_DIVIDEND',
+        number: 10,
+        isQuiz: false,
+        title: 'ROUND 10: $110M MILESTONE & $5 MEGA DIVIDEND ($60 / Share)',
+        price: 60,
+        stores: '200+ Locations',
+        revenue: '$110.0 Million',
+        valuation: '$60,000,000',
+        headline: 'Historic Milestone: Nova Pizza hits 200 stores & pays $5 Mega Dividend!',
+        details: 'Nova Pizza crosses $110M annual revenue with 200+ global stores! The Board deposits a huge $5.00 CASH Dividend per share into your account! Share price reaches an all-time high of $60 ($60M valuation)! Patient shareholders win massive wealth!',
+        dividend: 5
+    },
+    // --- GRAND FINALE ---
     {
         phase: 'GAME_OVER',
-        number: 7,
-        title: 'GRAND FINALE: THE WINNERS PODIUM',
-        price: 35,
+        number: 11,
+        isQuiz: false,
+        title: 'GRAND FINALE: WALL STREET CHAMPIONS',
+        price: 60,
+        stores: '200+ Locations',
+        revenue: '$110.0 Million',
+        valuation: '$60,000,000',
         headline: 'The Stock Market Showdown is Complete!',
-        details: 'See who built the largest net worth through patience, smart buying, and dividends!',
+        details: 'See who built the largest net worth through patience, smart buying during dips, and cash dividends!',
         dividend: 0
     }
 ];
@@ -336,12 +543,17 @@ function setRound(idx) {
     const r = ROUNDS[idx];
 
     state.phase = r.phase;
-    state.roundNumber = r.number;
+    state.roundNumber = r.number || state.roundNumber;
+    state.quizNumber = r.quizNumber || null;
+    state.isQuiz = Boolean(r.isQuiz);
     state.roundTitle = r.title;
     state.stockPrice = r.price;
+    state.storesCount = r.stores || state.storesCount;
+    state.annualRevenue = r.revenue || state.annualRevenue;
+    state.valuationFormatted = r.valuation || `$${(r.price * 1000000).toLocaleString()}`;
     state.newsHeadline = r.headline;
     state.newsDetails = r.details;
-    state.dividendAmount = r.dividend;
+    state.dividendAmount = r.dividend || 0;
 
     // Apply dividends if any
     if (r.dividend > 0) {
@@ -378,7 +590,13 @@ function resetGame() {
     state.gamePin = generateGamePin();
     state.phase = 'LOBBY';
     state.stockPrice = 10;
+    state.totalShares = 1000000;
+    state.storesCount = '12 Locations';
+    state.annualRevenue = '$8.5 Million';
+    state.valuationFormatted = '$10,000,000';
     state.roundNumber = 0;
+    state.quizNumber = null;
+    state.isQuiz = false;
     state.roundTitle = 'Waiting for Players...';
     state.newsHeadline = '';
     state.newsDetails = '';
@@ -460,6 +678,7 @@ wss.on('connection', (ws, req) => {
                         question: state.quizQuestion.question,
                         options: state.quizQuestion.options,
                         reward: state.quizQuestion.reward,
+                        quizNumber: state.quizNumber,
                         revealed: state.quizRevealed,
                         correct: state.quizRevealed ? state.quizQuestion.correct : null,
                         counts: state.quizRevealed ? getQuizCounts() : null
@@ -476,7 +695,13 @@ wss.on('connection', (ws, req) => {
                         phase: state.phase,
                         stockName: state.stockName,
                         stockPrice: state.stockPrice,
+                        totalShares: state.totalShares || 1000000,
+                        storesCount: state.storesCount || '12 Locations',
+                        annualRevenue: state.annualRevenue || '$8.5M',
+                        valuationFormatted: state.valuationFormatted || `$${(state.stockPrice * 1000000).toLocaleString()}`,
                         roundNumber: state.roundNumber,
+                        quizNumber: state.quizNumber,
+                        isQuiz: state.isQuiz,
                         roundTitle: state.roundTitle,
                         newsHeadline: state.newsHeadline,
                         newsDetails: state.newsDetails,

@@ -451,14 +451,44 @@
             z-index: 5;
         }
 
-        .pizza-stats-row {
+        .pizza-metrics-grid {
             width: 100%;
-            display: flex;
-            justify-content: space-between;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .pizza-metric-card {
             background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 12px;
-            padding: 12px 18px;
-            font-size: 13px;
+            padding: 10px 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            text-align: left;
+        }
+
+        .metric-title {
+            color: var(--text-sub);
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .metric-val {
+            font-size: 16px;
+            font-weight: 900;
+            font-family: 'Montserrat', sans-serif;
+            letter-spacing: -0.01em;
+        }
+
+        .metric-sub {
+            font-size: 10px;
+            color: var(--text-sub);
+            font-weight: 600;
         }
 
         /* Leaderboard and Live Feed Grid */
@@ -1148,7 +1178,7 @@
                 <div class="pizza-visual-card">
                     <div style="width: 100%; display: flex; justify-content: space-between; align-items: center;">
                         <span style="font-size: 14px; font-weight: 800; color: var(--accent-gold);">THE COMPANY ASSET</span>
-                        <span style="font-size: 12px; color: var(--text-sub);" id="totalSharesLabel">1 Share = 1 Slice</span>
+                        <span style="font-size: 12px; color: var(--text-sub);" id="totalSharesLabel">1,000,000 Shares (1 Share = 1 Slice)</span>
                     </div>
 
                     <div class="pizza-wheel-container">
@@ -1180,14 +1210,26 @@
                         </div>
                     </div>
 
-                    <div class="pizza-stats-row">
-                        <div>
-                            <span style="color: var(--text-sub); display: block; font-size: 11px;">VALUATION</span>
-                            <strong style="color: var(--accent-cyan); font-size: 16px;" id="pizzaValuation">$3.5 Billion</strong>
+                    <div class="pizza-metrics-grid">
+                        <div class="pizza-metric-card">
+                            <span class="metric-title">Market Valuation</span>
+                            <strong class="metric-val" style="color: var(--accent-cyan);" id="pizzaValuation">$10,000,000</strong>
+                            <span class="metric-sub" id="pizzaValFormula">1M shares × $10.00</span>
                         </div>
-                        <div style="text-align: right;">
-                            <span style="color: var(--text-sub); display: block; font-size: 11px;">PER SHARE</span>
-                            <strong style="color: var(--accent-green); font-size: 16px;" id="pizzaPerShare">$10.00</strong>
+                        <div class="pizza-metric-card">
+                            <span class="metric-title">Price Per Share</span>
+                            <strong class="metric-val" style="color: var(--accent-green);" id="pizzaPerShare">$10.00</strong>
+                            <span class="metric-sub">1 Share = 1 Slice</span>
+                        </div>
+                        <div class="pizza-metric-card">
+                            <span class="metric-title">Restaurants</span>
+                            <strong class="metric-val" style="color: var(--accent-gold);" id="pizzaStores">12 Locations</strong>
+                            <span class="metric-sub" id="pizzaStoresSub">California Chain</span>
+                        </div>
+                        <div class="pizza-metric-card">
+                            <span class="metric-title">Annual Sales</span>
+                            <strong class="metric-val" style="color: var(--accent-purple);" id="pizzaRevenue">$8.5 Million</strong>
+                            <span class="metric-sub">Profitable Growth</span>
                         </div>
                     </div>
 
@@ -1548,8 +1590,21 @@
             // Price Animation & Styling
             const priceEl = document.getElementById('stockPriceDisplay');
             priceEl.textContent = `$${state.stockPrice.toFixed(2)}`;
-            document.getElementById('pizzaPerShare').textContent = `$${state.stockPrice.toFixed(2)}`;
-            document.getElementById('pizzaValuation').textContent = `$${(state.stockPrice * 0.35).toFixed(1)} Billion`;
+
+            const perShareEl = document.getElementById('pizzaPerShare');
+            if (perShareEl) perShareEl.textContent = `$${state.stockPrice.toFixed(2)}`;
+
+            const valEl = document.getElementById('pizzaValuation');
+            if (valEl) valEl.textContent = state.valuationFormatted || `$${(state.stockPrice * 1000000).toLocaleString()}`;
+
+            const formulaEl = document.getElementById('pizzaValFormula');
+            if (formulaEl) formulaEl.textContent = `1M shares × $${state.stockPrice.toFixed(2)}`;
+
+            const storesEl = document.getElementById('pizzaStores');
+            if (storesEl) storesEl.textContent = state.storesCount || '12 Locations';
+
+            const revEl = document.getElementById('pizzaRevenue');
+            if (revEl) revEl.textContent = state.annualRevenue || '$8.5 Million';
 
             if (state.stockPrice > prevPrice) {
                 priceEl.classList.remove('red-pulse');
@@ -1587,12 +1642,12 @@
                     nextBtn.textContent = 'START GAME ▶';
                     nextBtn.style.background = '';
                 }
-            } else if (state.phase.startsWith('ROUND_5_QUIZ') || state.phase.startsWith('ROUND_6_QUIZ')) {
+            } else if (state.phase.includes('QUIZ') || (state.quizQuestion && state.quizActive)) {
                 quizView.style.display = 'flex';
                 renderQuiz(state.quizQuestion, state.quizProgress);
                 if (nextBtn) {
                     if (state.quizQuestion && state.quizQuestion.revealed) {
-                        nextBtn.textContent = state.phase.startsWith('ROUND_6') ? 'View Champions 🏆' : 'Next Round ▶';
+                        nextBtn.textContent = 'Next Round ▶';
                         nextBtn.style.background = '';
                     } else {
                         nextBtn.textContent = 'Reveal Answer 🎯';
@@ -1611,7 +1666,11 @@
                 tradingView.style.display = 'flex';
                 renderTrading(state);
                 if (nextBtn) {
-                    nextBtn.textContent = 'Next Round ▶';
+                    if (state.roundNumber === 10) {
+                        nextBtn.textContent = 'View Champions 🏆';
+                    } else {
+                        nextBtn.textContent = 'Next Round ▶';
+                    }
                     nextBtn.style.background = '';
                 }
             }
@@ -1645,13 +1704,13 @@
         function renderTrading(state) {
             const banner = document.getElementById('newsBanner');
             banner.className = 'news-hero-banner';
-            if (state.phase === 'ROUND_2_RALLY') banner.classList.add('rally-mode');
-            if (state.phase === 'ROUND_3_DIP') banner.classList.add('panic-mode');
-            if (state.phase === 'ROUND_4_DIVIDEND') banner.classList.add('dividend-mode');
+            if (state.dividendAmount > 0) banner.classList.add('dividend-mode');
+            else if (state.phase.includes('DIP') || state.phase.includes('PANIC') || state.phase.includes('WAR')) banner.classList.add('panic-mode');
+            else if (state.phase.includes('VIRAL') || state.phase.includes('GLOBAL') || state.phase.includes('REBOUND') || state.phase.includes('TECH') || state.phase.includes('EXPANSION')) banner.classList.add('rally-mode');
 
             document.getElementById('newsHeadline').textContent = state.newsHeadline;
             document.getElementById('newsDetails').textContent = state.newsDetails;
-            document.getElementById('roundCounterPill').textContent = `ROUND ${state.roundNumber} OF 6`;
+            document.getElementById('roundCounterPill').textContent = `ROUND ${state.roundNumber} OF 10`;
 
             const tbody = document.getElementById('tradingTableBody');
             tbody.innerHTML = '';
@@ -1690,6 +1749,12 @@
             const rewardEl = document.getElementById('quizRewardBadge');
             if (rewardEl) {
                 rewardEl.textContent = `+ $${quiz.reward || 30} CASH BONUS`;
+            }
+
+            const qNum = (quiz && quiz.quizNumber) ? quiz.quizNumber : '';
+            const counterPill = document.getElementById('roundCounterPill');
+            if (counterPill) {
+                counterPill.textContent = qNum ? `SPEED QUIZ ${qNum} OF 5` : 'SPEED QUIZ';
             }
 
             if (progress) {
